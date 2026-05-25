@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import BaseInput from "@/components/common/BaseInput.vue";
 import AddMemberModal from "@/components/project/AddMemberModal.vue";
@@ -7,80 +7,113 @@ import ConfirmModal from "@/components/common/ConfirmModal.vue";
 import { useProjectStore } from "@/stores/projectStore.js";
 import trashIcon from "@/assets/icons/trash.svg";
 const projectStore = useProjectStore();
+const router = useRouter();
 const isModalOpen = ref(false);
 // Xử lý xác nhận xóa thành viên
 const isConfirmOpen = ref(false);
 const memberIndexToDelete = ref(null);
-const triggerDelete = (index) => {
-  memberIndexToDelete.value = index;
-  isConfirmOpen.value = true;
-};
-const confirmDelete = () => {
-  if (memberIndexToDelete.value !== null) {
-    members.value.splice(memberIndexToDelete.value, 1);
-    isConfirmOpen.value = false;
-    memberIndexToDelete.value = null; // Reset lại
-  }
-};
-const onAddMembers = (selectedList) => {
-  selectedList.forEach((newMember) => {
-    const isExisted = members.value.some((m) => m.email === newMember.email);
-    if (!isExisted) {
-      // Đẩy thành viên mới vào mảng members
-      members.value.push({
-        name: newMember.name,
-        role: newMember.role,
-        email: newMember.email, // Thêm email để sau này dễ quản lý
-      });
-    }
-  });
-  isModalOpen.value = false;
-};
-const handleSave = () => {
-  const newProject = {
-    ...form,
-    code: `PR0J-${projectStore.projects.length + 1}`,
-    timeline: `${form.startDate} - ${form.endDate}`,
-    id: form.id || `P${Date.now()}`,
-    members: members.value,
-    createdAt: new Date().toLocaleDateString(),
-  };
-
-  projectStore.addProject(newProject);
-  router.push("/projects");
-};
-const router = useRouter();
-const form = reactive({
-  id: "",
+const form = ref({
+  projectCode: "",
   title: "",
   startDate: "",
   endDate: "",
   description: "",
-  pmName: "",
-  status: "Active",
+  pmId: "",
+  status: 1,
   isPublic: false,
   isActive: true,
+  members: [],
   stats: [
     { label: "Progress", current: Math.ceil(Math.random() * 100), total: 100 },
     { label: "Tasks", current: Math.ceil(Math.random() * 100), total: 600 },
     { label: "Bugs", current: Math.ceil(Math.random() * 100), total: 100 },
   ],
 });
-const members = ref([
-  { name: "Nguyễn Văn A", role: "Backend Developer" },
-  { name: "Nguyễn Văn B", role: "FrontEnd Developer" },
-  { name: "Nguyễn Thị C", role: "Project Manager" },
-]);
-// const removeMember = (index) => {
-//   members.value.splice(index, 1);
-// };
+const getRoleName = (roleId) => {
+  const roles = {
+    1: "Backend Developer",
+    2: "FrontEnd Developer",
+    3: "Project Manager",
+    4: "Tester",
+  };
+  return roles[roleId] || "Member";
+};
+const triggerDelete = (index) => {
+  memberIndexToDelete.value = index;
+  isConfirmOpen.value = true;
+};
+const confirmDelete = () => {
+  if (memberIndexToDelete.value !== null) {
+    form.value.members.splice(memberIndexToDelete.value, 1);
+    isConfirmOpen.value = false;
+    memberIndexToDelete.value = null;
+  }
+};
+const onAddMembers = (selectedList) => {
+  if (!selectedList || selectedList.length === 0) return;
+
+  selectedList.forEach((newMember) => {
+    // Check trùng lặp bằng userId
+    const isExisted = form.value.members.some(
+      (m) => (m.userId || m.id) === (newMember.userId || newMember.id),
+    );
+    console.log(newMember);
+    if (!isExisted) {
+      form.value.members.push({
+        userId: newMember.id,
+        userName: newMember.name,
+        email: newMember.userEmail,
+        roleId: parseInt(newMember.roleId),
+        roleName: getRoleName(newMember.roleId),
+      });
+    }
+  });
+
+  isModalOpen.value = false;
+};
+const handleSave = async () => {
+  try {
+    // Đóng gói Payload chuẩn theo DTO của Backend C#
+    const projectPayload = {
+      projectCode: form.value.projectCode,
+      title: form.value.title,
+      startDate: form.value.startDate ? new Date(form.value.startDate).toISOString() : null,
+      endDate: form.value.endDate ? new Date(form.value.endDate).toISOString() : null,
+      description: form.value.description,
+      projectManagerId: parseInt(form.value.pmId) || 0,
+      status: form.value.status,
+      isPublic: form.value.isPublic,
+      isActive: form.value.isActive,
+
+      // Mảng memberIds chỉ lấy ID và Role để gửi lên
+      memberIds: form.value.members.map((m) => ({
+        userId: parseInt(m.userId || m.id),
+        roleId: parseInt(m.roleId),
+      })),
+    };
+    console.log(projectPayload);
+    // Gọi hàm addProject từ Store
+    await projectStore.addProject(projectPayload);
+
+    // Tạo thành công thì quay về trang danh sách
+    router.push("/projects");
+  } catch (error) {
+    console.error("Lỗi khi tạo dự án:", error);
+    alert("Có lỗi xảy ra khi tạo dự án, vui lòng thử lại!");
+  }
+};
 </script>
 
 <template>
   <div class="create-project-container">
     <h2 class="page-title">Create Project</h2>
     <div class="form-card">
-      <BaseInput label="ID" v-model="form.id" required placeholder="Nhập mã dự án..." />
+      <BaseInput
+        label="Project Code"
+        v-model="form.projectCode"
+        required
+        placeholder="Nhập mã dự án..."
+      />
       <BaseInput label="Title" v-model="form.title" required placeholder="Nhập tên dự án..." />
 
       <div class="input-group">
@@ -95,12 +128,12 @@ const members = ref([
 
       <div class="field-container">
         <label class="field-label">Manager</label>
-        <select v-model="form.pmName" class="field-select">
+        <select v-model="form.pmId" class="field-select">
           <option value="">Chọn quản lý...</option>
-          <option value="pm-01">PM-01</option>
-          <option value="pm-02">PM-02</option>
-          <option value="pm-03">PM-03</option>
-          <option value="pm-04">PM-04</option>
+          <option value="13">PM-01</option>
+          <option value="14">PM-02</option>
+          <option value="15">PM-03</option>
+          <option value="16">PM-04</option>
         </select>
       </div>
       <div class="members-section">
@@ -119,10 +152,10 @@ const members = ref([
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(m, index) in members" :key="index">
+            <tr v-for="(m, index) in form.members" :key="index">
               <td>{{ index + 1 }}</td>
-              <td class="font-bold">{{ m.name }}</td>
-              <td>{{ m.role }}</td>
+              <td class="font-bold">{{ m.userName }}</td>
+              <td>{{ getRoleName(m.roleId) }}</td>
               <td class="text-center">
                 <button class="btn-delete" @click="triggerDelete(index)">
                   <img :src="trashIcon" alt="Delete" />
@@ -136,9 +169,9 @@ const members = ref([
         <div class="status-group">
           <label class="field-label">Status</label>
           <div class="radio-options">
-            <label><input type="radio" v-model="form.status" value="Active" /> Active</label>
-            <label><input type="radio" v-model="form.status" value="Pending" /> Pending</label>
-            <label><input type="radio" v-model="form.status" value="Completed" /> Completed</label>
+            <label><input type="radio" v-model="form.status" :value="0" /> Active</label>
+            <label><input type="radio" v-model="form.status" :value="1" /> Pending</label>
+            <label><input type="radio" v-model="form.status" :value="2" /> Completed</label>
           </div>
         </div>
 
@@ -158,7 +191,13 @@ const members = ref([
         <button class="btn-save" @click="handleSave">Save</button>
       </div>
     </div>
-    <AddMemberModal :isOpen="isModalOpen" @close="isModalOpen = false" @add="onAddMembers" />
+    <AddMemberModal
+      :isOpen="isModalOpen"
+      :projectId="0"
+      :currentMembers="form.members"
+      @close="isModalOpen = false"
+      @add="onAddMembers"
+    />
     <ConfirmModal :isOpen="isConfirmOpen" @close="isConfirmOpen = false" @confirm="confirmDelete" />
   </div>
 </template>
