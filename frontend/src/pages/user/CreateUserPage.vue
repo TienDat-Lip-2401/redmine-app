@@ -5,6 +5,7 @@ import { useUserStore } from "@/stores/userStore";
 import { useModalStore } from "@/stores/modalStore";
 import BaseInput from "@/components/common/BaseInput.vue";
 import BaseButton from "@/components/common/BaseButton.vue";
+import BaseLoading from "@/components/common/BaseLoading.vue";
 import ConfirmModal from "@/components/common/ConfirmModal.vue";
 import trashIcon from "@/assets/icons/trash.svg";
 import AssignPositionModal from "@/components/user/AssignPositionModal.vue";
@@ -14,6 +15,7 @@ const modalStore = useModalStore();
 const router = useRouter();
 const userStore = useUserStore();
 const isConfirmOpen = ref(false);
+const isLoading = ref(false);
 const positionIndexToDelete = ref(null);
 const form = reactive({
   code: "",
@@ -26,13 +28,7 @@ const form = reactive({
   leavedDate: "",
   isActive: true,
 });
-const positions = ref([
-  { id: 1, name: "Backend Developer" },
-  { id: 2, name: "Frontend Developer" },
-  { id: 3, name: "Business Analyst" },
-  { id: 4, name: "Project Manager" },
-  { id: 5, name: "Tester" },
-]);
+const positions = ref([]);
 const onAddPositions = (selectedList) => {
   selectedList.forEach((newPos) => {
     if (!positions.value.some((p) => p.id === newPos.id)) {
@@ -54,7 +50,36 @@ const confirmDeletePosition = () => {
 };
 
 const handleSave = async () => {
+  if (!form.code.trim() || !form.name.trim() || !form.email.trim()) {
+    modalStore.showModal({
+      title: "Thiếu thông tin",
+      message: "Vui lòng điền đầy đủ các trường bắt buộc (Code, Name, Email)!",
+      type: "error",
+    });
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(form.email)) {
+    modalStore.showModal({
+      title: "Lỗi dữ liệu",
+      message: "Địa chỉ Email không hợp lệ!",
+      type: "error",
+    });
+    return;
+  }
+
+  // 3. KIỂM TRA XEM ĐÃ CÓ CHỨC VỤ CHƯA (Tùy chọn)
+  if (positions.value.length === 0) {
+    modalStore.showModal({
+      title: "Thiếu chức vụ",
+      message: "Vui lòng chỉ định ít nhất một Position cho người dùng!",
+      type: "error",
+    });
+    return; // CHẶN LẠI
+  }
   try {
+    isLoading.value = true;
     const userPayload = {
       code: form.code,
       name: form.name,
@@ -93,8 +118,10 @@ const handleSave = async () => {
       message: errorMessage,
       type: "error",
     });
+  } finally {
+    isLoading.value = false;
   }
-  router.push("/users");
+  // router.push("/users");
 };
 </script>
 
@@ -158,6 +185,11 @@ const handleSave = async () => {
                 </button>
               </td>
             </tr>
+            <tr v-if="positions.length === 0">
+              <td colspan="3" style="text-align: center; color: #9ca3af; padding: 1.5rem">
+                Chưa có chức vụ nào được chỉ định.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -169,7 +201,7 @@ const handleSave = async () => {
 
       <div class="form-actions">
         <BaseButton variant="outline" @click="router.back()">Cancle</BaseButton>
-        <BaseButton variant="danger" @click="handleSave">Save</BaseButton>
+        <BaseButton variant="danger" @click="handleSave" :disabled="isLoading">Save</BaseButton>
       </div>
     </div>
 
@@ -180,9 +212,11 @@ const handleSave = async () => {
     />
     <AssignPositionModal
       :isOpen="isAssignModalOpen"
+      :currentPositions="positions"
       @close="isAssignModalOpen = false"
       @add="onAddPositions"
     />
+    <BaseLoading :isLoading="isLoading" text="Đang xử lý..." />
   </div>
 </template>
 
