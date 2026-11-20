@@ -12,6 +12,9 @@ namespace RedmineApp.Services.Interfaces
         Task<ApiResponse> RemovePositionFromUserAsync(DeletePositionRequest dto);
         Task<ApiResponse> GetAllPositonsAsync();
         Task<ApiResponse> GetAvailablePositionsAsync(int userId);
+        Task<ApiResponse> CreatePositionAsync(SavePositionRequestDto dto);
+        Task<ApiResponse> UpdatePositionAsync(int id, SavePositionRequestDto dto);
+        Task<ApiResponse> DeletePositionAsync(int id);
 
 
     }

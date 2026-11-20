@@ -1,0 +1,19 @@
+{
+  "positions": {
+    "title": "Chức vụ",
+    "subtitle": "Chức vụ của nhân viên. \"Admin\" và \"Project Manager\" là chức vụ hệ thống dùng để phân quyền.",
+    "name": "Tên chức vụ",
+    "name_placeholder": "Ví dụ: Business Analyst",
+    "name_required": "Vui lòng nhập tên chức vụ",
+    "count": "Số nhân viên",
+    "add": "Thêm chức vụ",
+    "edit": "Sửa chức vụ",
+    "system": "Hệ thống",
+    "system_hint": "Chức vụ dùng để phân quyền, không thể đổi tên hoặc xoá",
+    "empty": "Chưa có chức vụ nào",
+    "confirm_delete": "Xoá chức vụ \"{name}\"?",
+    "load_failed": "Không tải được danh sách chức vụ",
+    "save_failed": "Không lưu được chức vụ",
+    "delete_failed": "Không xoá được chức vụ"
+  }
+}

@@ -40,7 +40,32 @@ namespace RedmineApp.Repositories.Implement
         }
         public async Task<List<Position>> GetPositionsByIdsAsync(List<int> ids)
         {
-            return await _context.Positions.Where(p => ids.Contains(p.Id)).ToListAsync();
+            return await _context.Positions.Where(p => ids.Contains(p.Id) && !p.DeleteFlg).ToListAsync();
+        }
+
+        public async Task<List<(Position Position, int UserCount)>> GetAllWithUserCountAsync()
+        {
+            var rows = await _context.Positions
+                .Where(p => !p.DeleteFlg)
+                .OrderBy(p => p.Id)
+                .Select(p => new { Position = p, UserCount = p.Users.Count(u => !u.DeleteFlg) })
+                .ToListAsync();
+            return rows.Select(r => (r.Position, r.UserCount)).ToList();
+        }
+
+        // SQL Server mặc định so sánh không phân biệt hoa thường; ToLower để chắc chắn với mọi collation
+        public async Task<bool> ExistsByNameAsync(string name, int? excludeId = null)
+        {
+            var lowered = name.ToLower();
+            return await _context.Positions.AnyAsync(p =>
+                !p.DeleteFlg && p.Name.ToLower() == lowered && (excludeId == null || p.Id != excludeId));
+        }
+
+        public async Task<int> CountUsersAsync(int positionId)
+        {
+            return await _context.Users
+                .Where(u => !u.DeleteFlg)
+                .CountAsync(u => u.Positions.Any(p => p.Id == positionId));
         }
     }
 }

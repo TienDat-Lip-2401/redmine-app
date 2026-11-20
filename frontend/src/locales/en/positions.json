@@ -1,0 +1,19 @@
+{
+  "positions": {
+    "title": "Positions",
+    "subtitle": "Employee positions. \"Admin\" and \"Project Manager\" are system positions used for permissions.",
+    "name": "Position name",
+    "name_placeholder": "e.g. Business Analyst",
+    "name_required": "Please enter a position name",
+    "count": "Employees",
+    "add": "Add position",
+    "edit": "Edit position",
+    "system": "System",
+    "system_hint": "Used for permissions; cannot be renamed or deleted",
+    "empty": "No positions yet",
+    "confirm_delete": "Delete position \"{name}\"?",
+    "load_failed": "Could not load positions",
+    "save_failed": "Could not save the position",
+    "delete_failed": "Could not delete the position"
+  }
+}

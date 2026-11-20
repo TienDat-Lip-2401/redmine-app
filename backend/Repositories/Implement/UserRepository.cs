@@ -25,7 +25,7 @@ namespace RedmineApp.Repositories.Implement
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users
-                .Include(u => u.Positions)
+                .Include(u => u.Positions.Where(p => !p.DeleteFlg))
                 .AsNoTracking().
                 FirstOrDefaultAsync(u => u.Email == email);
         }
@@ -33,21 +33,21 @@ namespace RedmineApp.Repositories.Implement
 
         public async Task<List<Position>> GetPositionsByIdsAsync(List<int> ids)
         {
-            return await _context.Positions.Where(p => ids.Contains(p.Id)).ToListAsync();
+            return await _context.Positions.Where(p => ids.Contains(p.Id) && !p.DeleteFlg).ToListAsync();
         }
 
         public async Task<User?> GetUserByIdAsync(int id)
         {
             Console.WriteLine("Id: " + id);
             return await _context.Users
-                .Include (u => u.Positions)
+                .Include(u => u.Positions.Where(p => !p.DeleteFlg))
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<User?> GetUserDetailByIdAsync(int id)
         {
             return await _context.Users
-                .Include(u => u.Positions)
+                .Include(u => u.Positions.Where(p => !p.DeleteFlg))
                 .FirstOrDefaultAsync(u => u.Id == id && !u.DeleteFlg);
         }
 

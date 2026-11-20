@@ -62,6 +62,30 @@ namespace RedmineApp.Controllers
             var result =await _positionService.AddPositionListToUserAsync(dto);
             return StatusCode(result.StatusCode, result);
         }
+        [HttpPost]
+        [AuthorizeRole(PositionNames.Admin)]
+        public async Task<IActionResult> CreatePosition([FromBody] SavePositionRequestDto dto)
+        {
+            var result = await _positionService.CreatePositionAsync(dto);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPut("{id:int}")]
+        [AuthorizeRole(PositionNames.Admin)]
+        public async Task<IActionResult> UpdatePosition(int id, [FromBody] SavePositionRequestDto dto)
+        {
+            var result = await _positionService.UpdatePositionAsync(id, dto);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpDelete("{id:int}")]
+        [AuthorizeRole(PositionNames.Admin)]
+        public async Task<IActionResult> DeletePosition(int id)
+        {
+            var result = await _positionService.DeletePositionAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+
         [AuthorizeRole(PositionNames.Admin)]
         [HttpDelete]
         [Route("remove-position")]

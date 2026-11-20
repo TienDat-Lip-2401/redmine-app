@@ -13,6 +13,12 @@ export const positionService = {
   getAllPosition: () => {
     return http.get("/position/all");
   },
+  // POST: api/Position { name } (Admin)
+  create: (data) => http.post("/position", data),
+  // PUT: api/Position/{id} { name } (Admin, không áp dụng cho chức vụ hệ thống)
+  update: (id, data) => http.put(`/position/${id}`, data),
+  // DELETE: api/Position/{id} (Admin, không áp dụng cho chức vụ hệ thống)
+  remove: (id) => http.delete(`/position/${id}`),
   // GET: api/Position/available/{userId}
   getAvailable: (userId) => {
     return http.get(`/position/available/${userId}`);

@@ -10,6 +10,9 @@ namespace RedmineApp.Repositories.Interfaces
         
         Task<List<Position>> GetAvailablePositionsForUserAsync(int userId);
         Task<List<Position>> GetPositionsByIdsAsync(List<int> ids);
+        Task<List<(Position Position, int UserCount)>> GetAllWithUserCountAsync();
+        Task<bool> ExistsByNameAsync(string name, int? excludeId = null);
+        Task<int> CountUsersAsync(int positionId);
 
     }
 }
