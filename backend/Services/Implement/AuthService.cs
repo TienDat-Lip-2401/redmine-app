@@ -86,15 +86,11 @@ namespace RedmineApp.Services.Implement
                 };
                 return ApiResponse.Response(200, "Đăng nhập thành công!", result);
             }
-            catch (Exception ex)
+            catch
             {
+                // Lỗi không lường trước: rollback rồi để ExceptionHandlingMiddleware ghi log và trả 500
                 await transaction.RollbackAsync();
-                Exception innerEx = ex;
-                while (innerEx.InnerException != null)
-                {
-                    innerEx = innerEx.InnerException;
-                }
-                return ApiResponse.Response(500, "Đăng nhập thất bại! Lỗi: " + innerEx.Message);
+                throw;
             }
         }
 
@@ -170,10 +166,11 @@ namespace RedmineApp.Services.Implement
                 return ApiResponse.Response(200, "Gia hạn token thành công!", result);
 
             }
-            catch (Exception ex)
+            catch
             {
+                // Lỗi không lường trước: rollback rồi để ExceptionHandlingMiddleware ghi log và trả 500
                 await transaction.RollbackAsync();
-                return ApiResponse.Response(500, "Lỗi hệ thống khi gia hạn!");
+                throw;
             }
         }
 

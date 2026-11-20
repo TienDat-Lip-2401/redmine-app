@@ -36,12 +36,12 @@ builder.Services.AddCors(options =>
 });
 var app = builder.Build();
 app.UseCors("AllowOrigin");
+// Ngay sau CORS (response lỗi vẫn có header CORS) để bắt lỗi của mọi middleware/controller phía sau
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 
 
-// Configure the HTTP request pipeline.
-app.UseDeveloperExceptionPage();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

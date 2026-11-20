@@ -77,71 +77,63 @@ namespace RedmineApp.Services.Implement
 
         public async Task<ApiResponse> CreateProjectAsync(int currentUserId, CreateProjectRequestDto dto)
         {
-            try
+            if (dto.StartDate > dto.EndDate)
             {
-                if (dto.StartDate > dto.EndDate)
+                return ApiResponse.Response(400, "Ngày bắt đầu không được lớn hơn ngày kết thúc!");
+            }
+            // Frontend gửi 0 khi chưa chọn PM: khi đó người tạo dự án là người quản lý.
+            // Ngoài người tạo, người quản lý phải là user có chức vụ Project Manager.
+            int? managerId = dto.ProjectManagerId > 0 ? dto.ProjectManagerId : null;
+            if (managerId != null && managerId != currentUserId && !await IsValidProjectManagerAsync(managerId.Value))
+            {
+                return ApiResponse.Response(400, "Người quản lý được chọn không phải Project Manager đang hoạt động!");
+            }
+            var newProject = new Project
+            {
+                ProjectCode = dto.ProjectCode,
+                Title = dto.Title,
+                Description = dto.Description,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                ManagerId = managerId ?? currentUserId,
+                Status = dto.Status ?? 1,
+                IsPublic = dto.IsPublic ?? false,
+                IsActive = dto.IsActive ?? true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DeleteFlg = false,
+                ProjectMembers = new List<ProjectMember>()
+            };
+            if (dto.MemberIds != null && dto.MemberIds.Any())
+            {
+                var uniqueMembers = dto.MemberIds
+                    .GroupBy(m => m.UserId)
+                    .Select(g => g.First())
+                    .ToList();
+                foreach (var memberDto in uniqueMembers)
                 {
-                    return ApiResponse.Response(400, "Ngày bắt đầu không được lớn hơn ngày kết thúc!");
+                    newProject.ProjectMembers.Add(
+                            new ProjectMember
+                            {
+                                UserId = memberDto.UserId,
+                                RoleId = memberDto.RoleId,
+                            }
+                        );
                 }
-                // Frontend gửi 0 khi chưa chọn PM: khi đó người tạo dự án là người quản lý.
-                // Ngoài người tạo, người quản lý phải là user có chức vụ Project Manager.
-                int? managerId = dto.ProjectManagerId > 0 ? dto.ProjectManagerId : null;
-                if (managerId != null && managerId != currentUserId && !await IsValidProjectManagerAsync(managerId.Value))
-                {
-                    return ApiResponse.Response(400, "Người quản lý được chọn không phải Project Manager đang hoạt động!");
-                }
-                var newProject = new Project
-                {
-                    ProjectCode = dto.ProjectCode,
-                    Title = dto.Title,
-                    Description = dto.Description,
-                    StartDate = dto.StartDate,
-                    EndDate = dto.EndDate,
-                    ManagerId = managerId ?? currentUserId,
-                    Status = dto.Status ?? 1,
-                    IsPublic = dto.IsPublic ?? false,
-                    IsActive = dto.IsActive ?? true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    DeleteFlg = false,
-                    ProjectMembers = new List<ProjectMember>()
-                };
-                if (dto.MemberIds != null && dto.MemberIds.Any())
-                {
-                    var uniqueMembers = dto.MemberIds
-                        .GroupBy(m => m.UserId)
-                        .Select(g => g.First())
-                        .ToList();
-                    foreach (var memberDto in uniqueMembers)
-                    {
-                        newProject.ProjectMembers.Add(
-                                new ProjectMember
-                                {
-                                    UserId = memberDto.UserId,
-                                    RoleId = memberDto.RoleId,
-                                }
-                            );
-                    }
-                }
-                await _projectRepository.CreateAsync(newProject);
-                bool isSaved = await _projectRepository.SaveChangesAsync();
-                if (!isSaved)
-                {
-                    return ApiResponse.Response(500, "Lỗi hệ thống khi lưu dự án vào cơ sở dữ liệu.");
-                }
+            }
+            await _projectRepository.CreateAsync(newProject);
+            bool isSaved = await _projectRepository.SaveChangesAsync();
+            if (!isSaved)
+            {
+                return ApiResponse.Response(500, "Lỗi hệ thống khi lưu dự án vào cơ sở dữ liệu.");
+            }
 
-                // 5. Trả về kết quả
-                return ApiResponse.Response(201, "Tạo dự án và phân quyền thành viên thành công!", new
-                {
-                    ProjectId = newProject.Id,
-                    ProjectCode = newProject.ProjectCode
-                });
-            }
-            catch (Exception ex)
+            // 5. Trả về kết quả
+            return ApiResponse.Response(201, "Tạo dự án và phân quyền thành viên thành công!", new
             {
-                // Bắt lỗi exception (VD: Lỗi kết nối DB)
-                return ApiResponse.Response(500, $"Lỗi server: {ex.Message}");
-            }
+                ProjectId = newProject.Id,
+                ProjectCode = newProject.ProjectCode
+            });
         }
 
         public async Task<ApiResponse> DeleteProjectByIdAsync(int projectId)
@@ -167,25 +159,18 @@ namespace RedmineApp.Services.Implement
                 return ApiResponse.Response(404, "Không tìm thấy dự án!");
             }
             if (!CanManage(project)) return Forbidden();
-            try
-            {
-                // Gọi Repo lấy dữ liệu
-                var users = await _userRepository.GetUsersNotInProjectAsync(projectId);
+            // Gọi Repo lấy dữ liệu
+            var users = await _userRepository.GetUsersNotInProjectAsync(projectId);
 
-                // Map sang DTO
-                var userDtos = users.Select(u => new AvailableUserDto
-                {
-                    Id = u.Id,
-                    Name = u.Name,
-                    Email = u.Email
-                }).ToList();
-
-                return ApiResponse.Response(200, "Lấy danh sách user thành công", userDtos);
-            }
-            catch (Exception ex)
+            // Map sang DTO
+            var userDtos = users.Select(u => new AvailableUserDto
             {
-                return ApiResponse.Response(500, $"Lỗi server: {ex.Message}");
-            }
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email
+            }).ToList();
+
+            return ApiResponse.Response(200, "Lấy danh sách user thành công", userDtos);
         }
 
         public async Task<ApiResponse> GetProjectDetailAsync(int projectId)
@@ -291,25 +276,18 @@ namespace RedmineApp.Services.Implement
                 return ApiResponse.Response(404, "Không tìm thấy dự án!");
             }
             if (!CanManage(project)) return Forbidden();
-            try
+            var member = await _projectMemberRepository.GetByProjectAndUserAsync(projectId, userId);
+            if (member == null)
             {
-                var member = await _projectMemberRepository.GetByProjectAndUserAsync(projectId, userId);
-                if (member == null)
-                {
-                    return ApiResponse.Response(404, "Thành viên này không tồn tại trong dự án!");
-                }
-                _projectMemberRepository.Delete(member);
-                bool isSaved = await _projectMemberRepository.SaveChangesAsync();
-                if (!isSaved)
-                {
-                    return ApiResponse.Response(500, "Lỗi hệ thống khi xóa thành viên khỏi dự án.");
-                }
-                return ApiResponse.Response(200, "Đã xóa cứng thành viên khỏi dự án thành công!");
+                return ApiResponse.Response(404, "Thành viên này không tồn tại trong dự án!");
             }
-            catch (Exception ex)
+            _projectMemberRepository.Delete(member);
+            bool isSaved = await _projectMemberRepository.SaveChangesAsync();
+            if (!isSaved)
             {
-                return ApiResponse.Response(500, $"Lỗi server: {ex.Message}");
+                return ApiResponse.Response(500, "Lỗi hệ thống khi xóa thành viên khỏi dự án.");
             }
+            return ApiResponse.Response(200, "Đã xóa cứng thành viên khỏi dự án thành công!");
         }
 
         public async Task<ApiResponse> UpdateProjectAsync(int projectId, UpdateProjectRequestDto dto)
