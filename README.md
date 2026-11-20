@@ -45,6 +45,23 @@ npm install
 npm run dev               # http://localhost:5173
 ```
 
+### Chạy bằng Docker
+
+Cần Docker Desktop. Không cần cài .NET, Node hay SQL Server.
+
+```bash
+cp .env.example .env      # đặt MSSQL_SA_PASSWORD, JWT_KEY
+docker compose up -d --build
+```
+
+| Dịch vụ | Địa chỉ |
+| --- | --- |
+| Frontend | http://localhost:3000 |
+| Backend / Swagger | http://localhost:5164/swagger |
+| SQL Server | `localhost,1434` (user `sa`) |
+
+Service `db-init` tự tạo database lần đầu và áp dụng migration mới mỗi lần khởi động. Dữ liệu nằm trong volume `mssql-data`; `docker compose down -v` để xoá sạch. Đổi port trong `.env` (`BACKEND_PORT`, `FRONTEND_PORT`, `DB_PORT`); nếu đổi port backend thì đặt lại `VITE_API_URL` và build lại frontend.
+
 ## Cấu trúc thư mục
 
 ```
