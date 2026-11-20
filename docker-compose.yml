@@ -1,0 +1,55 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?set MSSQL_SA_PASSWORD in .env}
+    ports:
+      - "${DB_PORT:-1434}:1433"   # 1434 on the host to avoid clashing with a local SQL Server
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  db-init:
+    build:
+      context: ./backend
+      target: dbinit
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      DB_NAME: RedmineApp
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=db;Database=RedmineApp;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;"
+      JwtSettings__Key: ${JWT_KEY:?set JWT_KEY in .env}
+      AzureEmailConnectionString: ${AZURE_EMAIL_CONNECTION_STRING:-}
+    ports:
+      - "${BACKEND_PORT:-5164}:8080"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5164/api}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"   # 3000 is already in the backend's AllowOrigins
+    depends_on:
+      - backend
+
+volumes:
+  mssql-data:

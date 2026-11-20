@@ -1,0 +1,23 @@
+# Claude Code
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+
+# Skill output
+.taste-skill/
+
+# Docker secrets
+.env
+
+# Playwright (chỉ dùng local, không push)
+frontend/e2e/
+frontend/playwright.config.js
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+.playwright-cli/
+.playwright-mcp/
+
+# Báo cáo test HTML
+reports/
