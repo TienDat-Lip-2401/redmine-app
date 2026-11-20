@@ -1,0 +1,20 @@
+{
+  "roles": {
+    "title": "Vai trò trong dự án",
+    "subtitle": "Vai trò của thành viên khi tham gia dự án. Không ảnh hưởng đến quyền trong hệ thống.",
+    "name": "Tên vai trò",
+    "name_placeholder": "Ví dụ: DevOps",
+    "name_required": "Vui lòng nhập tên vai trò",
+    "count": "Số thành viên",
+    "add": "Thêm vai trò",
+    "edit": "Sửa vai trò",
+    "system": "Hệ thống",
+    "system_hint": "",
+    "empty": "Chưa có vai trò nào",
+    "confirm_delete": "Xoá vai trò \"{name}\"?",
+    "load_failed": "Không tải được danh sách vai trò",
+    "save_failed": "Không lưu được vai trò",
+    "delete_failed": "Không xoá được vai trò",
+    "select": "Chọn vai trò..."
+  }
+}

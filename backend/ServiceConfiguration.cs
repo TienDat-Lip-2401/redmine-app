@@ -20,6 +20,7 @@ namespace RedmineApp
             services.AddScoped<IPositionRepository, PositionRepository>();
             services.AddScoped<IProjectRepository, ProjectRepository>();
             services.AddScoped<IProjectMemberRepository, ProjectMemberRepository>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
             //
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserService, UserService>();
@@ -29,6 +30,7 @@ namespace RedmineApp
             services.AddScoped<IProjectService, ProjectService>();
             services.AddScoped<IProjectMemberService, ProjectMemberService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IRoleService, RoleService>();
             return services;
         }
     }

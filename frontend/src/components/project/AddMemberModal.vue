@@ -2,7 +2,9 @@
 import { ref, computed, watch } from "vue";
 import { useProjectStore } from "@/stores/projectStore";
 import { useUserStore } from "@/stores/userStore";
+import { useRoleStore } from "@/stores/roleStore";
 const userStore = useUserStore();
+const roleStore = useRoleStore();
 const projectStore = useProjectStore();
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
@@ -41,6 +43,7 @@ watch(
   (newVal) => {
     if (newVal) {
       loadAvailableUsers();
+      roleStore.fetchRoles();
       selectedUsers.value = [];
       searchQuery.value = "";
     }
@@ -149,11 +152,8 @@ const handleClose = () => {
                   class="role-select"
                   :disabled="!isSelected(user.id)"
                 >
-                  <option value="">Select role...</option>
-                  <option value="1">Backend Developer</option>
-                  <option value="2">FrontEnd Developer</option>
-                  <option value="3">Project Manager</option>
-                  <option value="4">Tester</option>
+                  <option value="">{{ $t("roles.select") }}</option>
+                  <option v-for="role in roleStore.roles" :key="role.id" :value="role.id">{{ role.name }}</option>
                 </select>
               </td>
             </tr>

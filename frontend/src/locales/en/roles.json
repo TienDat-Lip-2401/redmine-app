@@ -1,0 +1,20 @@
+{
+  "roles": {
+    "title": "Project roles",
+    "subtitle": "The role a member plays in a project. It does not affect system permissions.",
+    "name": "Role name",
+    "name_placeholder": "e.g. DevOps",
+    "name_required": "Please enter a role name",
+    "count": "Members",
+    "add": "Add role",
+    "edit": "Edit role",
+    "system": "System",
+    "system_hint": "",
+    "empty": "No roles yet",
+    "confirm_delete": "Delete role \"{name}\"?",
+    "load_failed": "Could not load roles",
+    "save_failed": "Could not save the role",
+    "delete_failed": "Could not delete the role",
+    "select": "Select role..."
+  }
+}

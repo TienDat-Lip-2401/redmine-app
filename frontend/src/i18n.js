@@ -11,6 +11,8 @@ import viUsers from "@/locales/vi/users.json";
 import enUsers from "@/locales/en/users.json";
 import viPositions from "@/locales/vi/positions.json";
 import enPositions from "@/locales/en/positions.json";
+import viRoles from "@/locales/vi/roles.json";
+import enRoles from "@/locales/en/roles.json";
 
 const messages = {
   vi: {
@@ -20,6 +22,7 @@ const messages = {
     ...viProjects,
     ...viUsers,
     ...viPositions,
+    ...viRoles,
   },
   en: {
     ...enAuth,
@@ -28,6 +31,7 @@ const messages = {
     ...enProjects,
     ...enUsers,
     ...enPositions,
+    ...enRoles,
   },
 };
 
