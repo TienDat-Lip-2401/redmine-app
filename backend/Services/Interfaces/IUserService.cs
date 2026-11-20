@@ -9,6 +9,7 @@ namespace RedmineApp.Services.Interfaces
         Task<ApiResponse> GetUserInfoById(int id);
         Task<ApiResponse> GetMeAsync();
         Task<ApiResponse> GetAllUserAsync();
+        Task<ApiResponse> GetPagedUsersAsync(int page, int size, string? field, string? keyword, string? status);
         Task<ApiResponse> GetProjectManagersAsync();
         //Task<ApiResponse> GetUserByIdAsync(int id);
         Task<ApiResponse> DeleteUserByIdAsync(int id);

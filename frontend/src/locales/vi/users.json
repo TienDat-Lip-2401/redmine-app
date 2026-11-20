@@ -32,6 +32,7 @@
     "update_success": "Cập nhật người dùng thành công!",
     "update_failed": "Cập nhật thất bại, vui lòng kiểm tra lại!",
     "delete_loading": "Đang xóa người dùng...",
+    "load_failed": "Không tải được danh sách người dùng!",
     "delete_failed": "Xóa thất bại!",
     "fetch_detail_error": "Không thể lấy thông tin người dùng này!"
   }

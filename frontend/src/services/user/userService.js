@@ -1,7 +1,13 @@
 import { http } from "@/api/axiosClient";
 export const userService = {
+  // Danh sách đầy đủ, dùng cho ô chọn người dùng (vd. modal thêm thành viên)
   getAll: () => {
     return http.get("/user/get-all");
+  },
+  // Có phân trang: params = { page, size, field, keyword, status }
+  // Trả về ApiResponse.data = { data: [...], totalItems, totalPages, currentPage, pageSize }
+  getPaged: (params) => {
+    return http.get("/user", { params });
   },
   delete: (id) => {
     return http.delete(`/user/${id}`);

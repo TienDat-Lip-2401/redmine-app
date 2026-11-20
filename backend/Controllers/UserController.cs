@@ -21,6 +21,21 @@ namespace RedmineApp.Controllers
             _userService = userService;
             _commonService = commonService;
         }
+        // Danh sách có phân trang cho trang Users: ?page&size&field=name|email|code&keyword&status=active|inactive
+        [HttpGet]
+        [AuthorizeRole(PositionNames.Admin)]
+        public async Task<IActionResult> GetPaged(
+            [FromQuery] int page = 1,
+            [FromQuery] int size = PagedResult<object>.DefaultPageSize,
+            [FromQuery] string? field = null,
+            [FromQuery] string? keyword = null,
+            [FromQuery] string? status = null)
+        {
+            var result = await _userService.GetPagedUsersAsync(page, size, field, keyword, status);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        // Danh sách đầy đủ (không phân trang) cho các ô chọn người dùng, vd. modal thêm thành viên dự án
         [HttpGet]
         [Route("get-all")]
         [AuthorizeRole(PositionNames.Admin)]

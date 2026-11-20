@@ -71,21 +71,35 @@ namespace RedmineApp.Services.Implement
             return ApiResponse.Response(200, "Thành công", result);
         }
 
+        private static UserResponseDto ToUserResponse(User u) => new()
+        {
+            Id = u.Id,
+            Code = u.Code,
+            Name = u.Name,
+            Email = u.Email,
+            PhoneNumber = u.PhoneNumber,
+            JoinDate = u.JoinedDate ?? DateTime.UtcNow,
+            Status = u.IsActive,
+        };
+
         public async Task<ApiResponse> GetAllUserAsync()
         {
             var users = await _userRepository.GetAllAsync();
-            var result = users.Where(u => !u.DeleteFlg).Select(u => new UserResponseDto
-            {
-                Id = u.Id,
-                Code = u.Code,
-                Name = u.Name,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-                JoinDate = u.JoinedDate ?? DateTime.UtcNow,
-                Status = u.IsActive,
-
-            }).ToList();
+            var result = users.Where(u => !u.DeleteFlg).Select(ToUserResponse).ToList();
             return ApiResponse.Response(200, "Thành công", result);
+        }
+
+        // status: "active" | "inactive" | khác = tất cả
+        public async Task<ApiResponse> GetPagedUsersAsync(int page, int size, string? field, string? keyword, string? status)
+        {
+            bool? isActive = status?.ToLowerInvariant() switch
+            {
+                "active" => true,
+                "inactive" => false,
+                _ => null,
+            };
+            var users = await _userRepository.GetPagedUsersAsync(field, keyword, isActive, page, size);
+            return ApiResponse.Response(200, "Thành công", users.Map(ToUserResponse));
         }
 
         public async Task<ApiResponse> GetMeAsync()

@@ -27,6 +27,27 @@ export const useUserStore = defineStore("user", () => {
       isLoading.value = false;
     }
   };
+  // --- Danh sách có phân trang cho trang Users (lọc/tìm kiếm ở server) ---
+  const pagedUsers = ref([]);
+  const pageInfo = ref({ totalItems: 0, totalPages: 1, currentPage: 1, pageSize: 10 });
+  let lastPageQuery = {};
+  let pageRequestId = 0;
+  // Request mới nhất luôn thắng: response cũ về sau (gõ tìm kiếm nhanh) bị bỏ qua
+  const fetchUserPage = async (query = lastPageQuery) => {
+    const requestId = ++pageRequestId;
+    lastPageQuery = query;
+    const response = await userService.getPaged(query);
+    if (requestId !== pageRequestId) return;
+    const paged = response.data || {};
+    pagedUsers.value = paged.data || [];
+    pageInfo.value = {
+      totalItems: paged.totalItems || 0,
+      totalPages: paged.totalPages || 1,
+      currentPage: paged.currentPage || 1,
+      pageSize: paged.pageSize || query.size,
+    };
+  };
+
   const deleteUser = async (id) => {
     try {
       const response = await userService.delete(id);
@@ -116,6 +137,9 @@ export const useUserStore = defineStore("user", () => {
     isLoading,
     error,
     fetchUsers,
+    pagedUsers,
+    pageInfo,
+    fetchUserPage,
     deleteUser,
     getMyProfile,
     updateUser,

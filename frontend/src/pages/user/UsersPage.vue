@@ -18,19 +18,8 @@ const userStore = useUserStore();
 const modalStore = useModalStore();
 const isLoading = ref(false);
 const loadingText = ref(t("common.loading"));
-onMounted(async () => {
-  try {
-    isLoading.value = true;
-    loadingText.value = t("common.loading");
-    await userStore.fetchUsers();
-  } catch (error) {
-    console.error("Lỗi khi tải User:", error);
-  } finally {
-    isLoading.value = false;
-  }
-});
 
-// --- QUẢN LÝ TÌM KIẾM ---
+// --- TÌM KIẾM, LỌC, PHÂN TRANG: xử lý ở server ---
 const searchQuery = ref("");
 const debouncedSearchQuery = ref("");
 let debounceTimeout = null;
@@ -47,57 +36,56 @@ watch(searchQuery, (newQuery) => {
 // --- XỬ LÝ XÓA ---
 const isConfirmOpen = ref(false);
 const userIdToDelete = ref(null);
-// --- Chuyển đổi dấu sang không dấu ---
-const removeVietnameseTones = (str) => {
-  if (!str) return "";
-  return str
-    .normalize("NFD") // Tách các dấu ra khỏi chữ cái gốc
-    .replace(/[\u0300-\u036f]/g, "") // Xóa các dấu vừa tách
-    .replace(/đ/g, "d") // Xử lý riêng chữ đ
-    .replace(/Đ/g, "D")
-    .toLowerCase();
-};
 // Đổi trường tìm kiếm thì xóa trắng ô nhập
 watch(searchField, () => {
   searchQuery.value = "";
 });
-// Khi searchQuery, statusFilter hoặc searchField thay đổi thì reset về trang 1
-watch([debouncedSearchQuery, statusFilter, searchField], () => {
-  currentPage.value = 1;
+
+const loadUsers = async () => {
+  try {
+    isLoading.value = true;
+    loadingText.value = t("common.loading");
+    await userStore.fetchUserPage({
+      page: currentPage.value,
+      size: itemsPerPage.value,
+      // Chưa chọn trường thì không lọc theo từ khoá (giữ hành vi cũ: ô tìm kiếm bị khoá)
+      field: searchField.value || undefined,
+      keyword: searchField.value ? debouncedSearchQuery.value.trim() || undefined : undefined,
+      status: statusFilter.value ? statusFilter.value.toLowerCase() : undefined,
+    });
+  } catch (error) {
+    modalStore.showModal({
+      title: t("common.alert.failed"),
+      message: error.response?.data?.message || t("users.load_failed"),
+      type: "error",
+    });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Đổi bộ lọc thì về trang 1; nếu đã ở trang 1 thì watcher currentPage không chạy nên tải trực tiếp
+watch([debouncedSearchQuery, statusFilter, searchField, itemsPerPage], () => {
+  if (currentPage.value !== 1) currentPage.value = 1;
+  else loadUsers();
 });
+watch(currentPage, loadUsers);
+onMounted(loadUsers);
+
+// Server lùi về trang cuối khi trang đang xem không còn dữ liệu (vd. sau khi xoá) -> đồng bộ số trang
+watch(
+  () => userStore.pageInfo.currentPage,
+  (serverPage) => {
+    if (serverPage && serverPage !== currentPage.value) currentPage.value = serverPage;
+  },
+);
+
 const handleEdit = (userId) => {
   router.push(`/users/update/${userId}`);
 };
-const filteredUsers = computed(() => {
-  const key = removeVietnameseTones(debouncedSearchQuery.value);
-
-  return userStore.users.filter((user) => {
-    // 1. Lọc theo trường tìm kiếm
-    const fieldValue = searchField.value
-      ? removeVietnameseTones(user[searchField.value] || "")
-      : "";
-    const matchSearch = searchField.value ? fieldValue.includes(key) : true;
-
-    // 2. Lọc theo trạng thái (Xử lý chuyển đổi kiểu)
-    let matchStatus = true;
-    if (statusFilter.value === "Active") {
-      matchStatus = user.status === true;
-    } else if (statusFilter.value === "Inactive") {
-      matchStatus = user.status === false;
-    }
-
-    return matchSearch && matchStatus;
-  });
-});
-const totalItems = computed(() => filteredUsers.value.length);
-const totalPages = computed(() => {
-  return totalItems.value > 0 ? Math.ceil(totalItems.value / itemsPerPage.value) : 1;
-});
-const paginatedUsers = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return filteredUsers.value.slice(start, end);
-});
+const totalItems = computed(() => userStore.pageInfo.totalItems);
+const totalPages = computed(() => userStore.pageInfo.totalPages);
+const paginatedUsers = computed(() => userStore.pagedUsers);
 const handleCreateUser = () => {
   router.push("/users/create");
 };
@@ -120,9 +108,8 @@ const confirmDelete = async () => {
     const result = await userStore.deleteUser(userIdToDelete.value);
 
     if (result.success) {
-      if (paginatedUsers.value.length === 0 && currentPage.value > 1) {
-        currentPage.value--;
-      }
+      // Tải lại trang hiện tại từ server (tổng số cập nhật, lấp chỗ trống bằng user của trang sau)
+      await userStore.fetchUserPage();
     } else {
       modalStore.showModal({
         title: t("common.alert.failed"),

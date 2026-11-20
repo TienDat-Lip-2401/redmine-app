@@ -32,6 +32,7 @@
     "update_success": "User updated successfully!",
     "update_failed": "Failed to update user, please check again!",
     "delete_loading": "Deleting user...",
+    "load_failed": "Could not load users!",
     "delete_failed": "Failed to delete user!",
     "fetch_detail_error": "Could not retrieve information for this user!"
   }
