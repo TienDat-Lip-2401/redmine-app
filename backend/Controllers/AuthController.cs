@@ -56,12 +56,13 @@ namespace RedmineApp.Controllers
         [HttpPost]
         [Route("refresh-token")]
         [AllowAnonymous]
-        public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
+        public async Task<IActionResult> RefreshToken()
         {
+            // Refresh token được đọc từ cookie HttpOnly, không cần body
             var ipAddress = Request.Headers["X-Forwarded-For"].FirstOrDefault()
                            ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = Request.Headers["User-Agent"].ToString();
-            var response = await _authService.RefreshTokenAsync(dto, ipAddress, userAgent);
+            var response = await _authService.RefreshTokenAsync(ipAddress, userAgent);
             if (response.StatusCode != 200) return BadRequest(response);
             return Ok(response);
         }

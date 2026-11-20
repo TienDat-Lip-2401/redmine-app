@@ -116,7 +116,7 @@ namespace RedmineApp.Services.Implement
             return ApiResponse.Response(200, "Đăng xuất thành công!");
         }
 
-        public async Task<ApiResponse> RefreshTokenAsync(RefreshTokenRequestDto dto, string? ipAddress, string? userAgent)
+        public async Task<ApiResponse> RefreshTokenAsync(string? ipAddress, string? userAgent)
         {
             var rawRefreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refresh_token"];
 

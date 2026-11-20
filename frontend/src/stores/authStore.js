@@ -17,15 +17,20 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
+  // Xoá phiên ở phía client (không gọi API). Dùng khi phiên hết hạn hoặc bị thu hồi.
+  const clearSession = () => {
+    user.value = null;
+    isAuthenticated.value = false;
+    localStorage.removeItem("user");
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
     } catch (error) {
       console.error("Lỗi khi đăng xuất backend:", error);
     } finally {
-      user.value = null;
-      localStorage.removeItem("user");
-      isAuthenticated.value = false;
+      clearSession();
     }
   };
   const clearFirstLoginFlag = () => {
@@ -57,6 +62,7 @@ export const useAuthStore = defineStore("auth", () => {
     setAuthData,
     setUser,
     logout,
+    clearSession,
     resetPassword,
     clearFirstLoginFlag,
     refreshToken,

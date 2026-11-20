@@ -34,8 +34,8 @@ export const setupAuthInterceptor = () => {
       // Nếu API logout bị 401, tuyệt đối KHÔNG gọi authStore.logout() nữa
       // ==============================================================
       if (error.response?.status === 401 && originalRequest.url.includes("/auth/logout")) {
-        authStore.user = null; // Dọn dẹp State
-        localStorage.removeItem("user"); // Dọn dẹp ổ cứng
+        // Phải đặt cả isAuthenticated = false, nếu không guard sẽ đẩy ngược từ Login về Home
+        authStore.clearSession();
         router.push({ name: "Login" });
         return Promise.reject(error);
       }
@@ -45,8 +45,7 @@ export const setupAuthInterceptor = () => {
       // Nếu API gia hạn token mà cũng báo lỗi 401 thì dọn dẹp và nghỉ luôn
       // ==============================================================
       if (error.response?.status === 401 && originalRequest.url.includes("/auth/refresh-token")) {
-        authStore.user = null;
-        localStorage.removeItem("user");
+        authStore.clearSession();
         router.push({ name: "Login" });
         return Promise.reject(error);
       }
@@ -76,8 +75,7 @@ export const setupAuthInterceptor = () => {
           // Lỗi rồi thì ép out. TUYỆT ĐỐI KHÔNG dùng authStore.logout() ở đây!
           processQueue(refreshError);
 
-          authStore.user = null;
-          localStorage.removeItem("user");
+          authStore.clearSession();
           router.push({ name: "Login" });
 
           return Promise.reject(refreshError);
