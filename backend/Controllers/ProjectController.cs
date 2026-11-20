@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RedmineApp.Constants;
 using RedmineApp.Filter;
 using RedmineApp.Models.DtoModels.Project;
 using RedmineApp.Models.DtoModels.ProjectMember;
@@ -39,7 +40,7 @@ namespace RedmineApp.Controllers
             return StatusCode(result.StatusCode, result);
         }
         [HttpPost]
-        [AuthorizeRole("Admin")]
+        [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequestDto dto)
         {
             int currentUserId = _commonService.GetUserId();
@@ -52,7 +53,6 @@ namespace RedmineApp.Controllers
         }
         [HttpPost]
         [Route("{projectId}/member")]
-        [AuthorizeRole("Admin", "Project Manager")]
         public async Task<IActionResult> AddMembersToProject(int projectId, [FromBody] List<ProjectMemberRequestDto> dtos)
         {
             if (dtos == null || !dtos.Any())
@@ -64,7 +64,6 @@ namespace RedmineApp.Controllers
         }
         [HttpDelete]
         [Route("{projectId}/member/{userId}")]
-        [AuthorizeRole("Admin", "ProjectManager")]
         public async Task<IActionResult> RemoveMemberFromProject(int projectId, int userId)
         {
             var result = await _projectService.RemoveMemberFromProjectAsync(projectId, userId);
@@ -79,7 +78,6 @@ namespace RedmineApp.Controllers
         }
         [HttpPut]
         [Route("{projectId}")]
-        [AuthorizeRole("Admin", "Project Manager")]
         public async Task<IActionResult> UpdateProject(int projectId, [FromBody] UpdateProjectRequestDto dto)
         {
             var currentUserId = _commonService.GetUserId();
@@ -96,14 +94,11 @@ namespace RedmineApp.Controllers
         }
         [HttpDelete]
         [Route("{projectId}")]
+        [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> DeleteProject(int projectId)
         {
             var response = await _projectService.DeleteProjectByIdAsync(projectId);
-            if (response.StatusCode == 404)
-            {
-                return NotFound(response);
-            }
-            return Ok(response);
+            return StatusCode(response.StatusCode, response);
         }
     }
 }

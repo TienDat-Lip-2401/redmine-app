@@ -11,9 +11,13 @@ import BaseLoading from "@/components/common/BaseLoading.vue";
 import trashIcon from "@/assets/icons/trash.svg";
 import AssignPositionModal from "@/components/user/AssignPositionModal.vue";
 import { useModalStore } from "@/stores/modalStore";
+import { useAuthStore } from "@/stores/authStore";
 
 const { t } = useI18n();
 const router = useRouter();
+const authStore = useAuthStore();
+// Mã, email, trạng thái, ngày vào/nghỉ và chức vụ chỉ Admin được sửa
+const isAdmin = computed(() => authStore.isAdmin);
 const userStore = useUserStore();
 const positionStore = usePositionStore();
 const modalStore = useModalStore();
@@ -171,8 +175,11 @@ const handleSave = async () => {
         message: t("users.update_success"),
         type: "success",
       });
-      await userStore.fetchUsers();
-      router.push("/users");
+      // Chỉ Admin mới xem được danh sách người dùng; người khác ở lại trang hồ sơ
+      if (isAdmin.value) {
+        await userStore.fetchUsers(true);
+        router.push("/users");
+      }
     } else {
       alert(response.message || t("users.update_failed"));
     }
@@ -195,6 +202,7 @@ const handleSave = async () => {
         :label="$t('users.code')"
         v-model="form.code"
         required
+        :disabled="!isAdmin"
         :placeholder="$t('users.code_placeholder')"
       />
 
@@ -210,6 +218,7 @@ const handleSave = async () => {
         v-model="form.email"
         type="email"
         required
+        :disabled="!isAdmin"
         :placeholder="$t('users.email_placeholder')"
       />
 
@@ -232,14 +241,24 @@ const handleSave = async () => {
       </div>
 
       <div class="input-grid">
-        <BaseInput :label="$t('users.join_date')" v-model="form.joinedDate" type="date" />
-        <BaseInput :label="$t('users.leave_date')" v-model="form.leavedDate" type="date" />
+        <BaseInput
+          :label="$t('users.join_date')"
+          v-model="form.joinedDate"
+          type="date"
+          :disabled="!isAdmin"
+        />
+        <BaseInput
+          :label="$t('users.leave_date')"
+          v-model="form.leavedDate"
+          type="date"
+          :disabled="!isAdmin"
+        />
       </div>
 
       <div class="positions-section">
         <div class="section-header">
           <label class="field-label">{{ $t("users.position") }}</label>
-          <button class="btn-assign" @click="isAssignModalOpen = true">
+          <button v-if="isAdmin" class="btn-assign" @click="isAssignModalOpen = true">
             + {{ $t("users.assign_position") }}
           </button>
         </div>
@@ -249,14 +268,14 @@ const handleSave = async () => {
             <tr>
               <th width="10%">{{ $t("common.no") }}</th>
               <th width="70%">{{ $t("users.name") }}</th>
-              <th width="20%" class="text-center">{{ $t("common.action") }}</th>
+              <th v-if="isAdmin" width="20%" class="text-center">{{ $t("common.action") }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(pos, index) in positions" :key="pos.id">
               <td>{{ index + 1 }}</td>
               <td>{{ pos.name }}</td>
-              <td class="text-center">
+              <td v-if="isAdmin" class="text-center">
                 <button class="btn-delete" @click="triggerDeletePosition(pos.id)">
                   <img :src="trashIcon" alt="Delete" />
                 </button>
@@ -268,7 +287,7 @@ const handleSave = async () => {
 
       <div class="status-switch">
         <span class="field-label">{{ $t("common.status.active") }}</span>
-        <input type="checkbox" v-model="form.isActive" class="switch" />
+        <input type="checkbox" v-model="form.isActive" class="switch" :disabled="!isAdmin" />
       </div>
 
       <div class="form-actions">

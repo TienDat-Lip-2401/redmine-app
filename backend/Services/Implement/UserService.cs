@@ -1,4 +1,5 @@
-﻿ using RedmineApp.Models.CommonModels;
+﻿using RedmineApp.Constants;
+using RedmineApp.Models.CommonModels;
 using RedmineApp.Models.DtoModels.Position;
 using RedmineApp.Models.DtoModels.User;
 using RedmineApp.Models.EntityModels;
@@ -31,16 +32,20 @@ namespace RedmineApp.Services.Implement
 
         public async Task<ApiResponse> DeleteUserByIdAsync(int id)
         {
+            string position = _commonService.GetPosition();
+            if (position != PositionNames.Admin)
+            {
+                return ApiResponse.Response(403, "Bạn không có quyền xóa User");
+            }
+            if (_commonService.GetUserId() == id)
+            {
+                return ApiResponse.Response(400, "Bạn không thể tự xóa tài khoản của chính mình");
+            }
             var user = await _userRepository.GetByIdAsync(id);
             if(user == null)
             {
                 return ApiResponse.Response(404, "Không tìm thấy User");
 
-            }
-            string position = _commonService.GetPosition();
-            if (position != "Admin")
-            {
-                return ApiResponse.Response(403, "Bạn không có quyền xóa User");
             }
             var isDeleted = await _userRepository.DeleteByIdAsync(id);
             if(!isDeleted)
@@ -136,25 +141,33 @@ namespace RedmineApp.Services.Implement
 
         public async Task<ApiResponse> UpdateUserAsync(int id, UpdateUserRequestDto dto)
         {
+            bool isAdmin = _commonService.GetPosition() == PositionNames.Admin;
+            if (!isAdmin && _commonService.GetUserId() != id)
+            {
+                return ApiResponse.Response(403, "Bạn không có quyền cập nhật User này");
+            }
             var user = await _userRepository.GetUserDetailByIdAsync(id);
             if(user == null)
             {
                 return ApiResponse.Response(404, "Không tìm thấy User");
             }
-            if(_commonService.GetUserId() != id && _commonService.GetPosition() != "Admin")
-            {
-                return ApiResponse.Response(403, "Bạn không có quyền cập nhật User này");
-            }
-            user.Code = dto.Code;
+            // Thông tin cơ bản: ai tự sửa mình cũng được
             user.Name = dto.Name;
-            user.Email = dto.Email;
             user.Gender = dto.Gender;
             user.PhoneNumber = dto.PhoneNumber;
             user.Birthday = dto.Birthday;
+            user.UpdatedAt = DateTime.Now;
+            if (!isAdmin)
+            {
+                // Mã, email, trạng thái, ngày vào/nghỉ và chức vụ chỉ Admin được đổi: bỏ qua các trường này
+                await _userRepository.SaveChangesAsync();
+                return ApiResponse.Response(200, "Cập nhật User thành công");
+            }
+            user.Code = dto.Code;
+            user.Email = dto.Email;
             user.JoinedDate = dto.JoinedDate;
             user.LeavedDate = dto.LeavedDate;
             user.IsActive = dto.IsActive;
-            user.UpdatedAt = DateTime.Now;
             user.Positions.Clear();
             var positionsId = dto.Positions.Select(p => p.Id).ToList();
             var existingPositions = await _userRepository.GetPositionsByIdsAsync(positionsId);

@@ -14,6 +14,7 @@ export const projectRoutes = [
         path: "create",
         name: ROUTE_NAMES.CREATE_PROJECT,
         component: () => import("@/pages/projects/CreateProjectPage.vue"),
+        meta: { adminOnly: true },
       },
       {
         path: "update/:id",

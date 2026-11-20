@@ -1,4 +1,5 @@
-﻿using RedmineApp.Models.CommonModels;
+﻿using RedmineApp.Constants;
+using RedmineApp.Models.CommonModels;
 using RedmineApp.Models.DtoModels.Project;
 using RedmineApp.Models.DtoModels.ProjectMember;
 using RedmineApp.Models.DtoModels.User;
@@ -23,6 +24,19 @@ namespace RedmineApp.Services.Implement
             _userRepository = userRepository;
         }
 
+        private static ApiResponse Forbidden() =>
+            ApiResponse.Response(403, "Bạn không có quyền thực hiện thao tác này với dự án!");
+
+        // Quản lý dự án: Admin hoặc PM của chính dự án đó (ManagerId)
+        private bool CanManage(Project project) =>
+            _commonService.GetPosition() == PositionNames.Admin
+            || project.ManagerId == _commonService.GetUserId();
+
+        // Xem dự án: người quản lý hoặc thành viên của dự án
+        private async Task<bool> CanViewAsync(Project project) =>
+            CanManage(project)
+            || await _projectMemberRepository.IsUserInProjectAsync(project.Id, _commonService.GetUserId());
+
         public async Task<ApiResponse> AddMembersToProjectAsync(int projectId, List<ProjectMemberRequestDto> memberDtos)
         {
             var project = await _projectRepository.GetByIdAsync(projectId);
@@ -30,6 +44,7 @@ namespace RedmineApp.Services.Implement
             {
                 return ApiResponse.Response(404, "Không tìm thấy dự án!");
             }
+            if (!CanManage(project)) return Forbidden();
             var newMembers = new List<ProjectMember>();
             foreach (var dto in memberDtos)
             {
@@ -132,6 +147,12 @@ namespace RedmineApp.Services.Implement
 
         public async Task<ApiResponse> GetAvailableUsersForProjectAsync(int projectId)
         {
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+            {
+                return ApiResponse.Response(404, "Không tìm thấy dự án!");
+            }
+            if (!CanManage(project)) return Forbidden();
             try
             {
                 // Gọi Repo lấy dữ liệu
@@ -161,6 +182,7 @@ namespace RedmineApp.Services.Implement
             {
                 return ApiResponse.Response(404, "Không tìm thấy dự án hoặc dự án đã bị xóa!");
             }
+            if (!await CanViewAsync(project)) return Forbidden();
             var projectDto = new ProjectResponseDto
             {
                 Id = project.Id,
@@ -224,7 +246,7 @@ namespace RedmineApp.Services.Implement
             }
             var currentPositionUser = _commonService.GetPosition();
             List<Project> projects;
-            if (currentPositionUser == "Admin")
+            if (currentPositionUser == PositionNames.Admin)
             {
                 projects = await _projectRepository.GetAllAsync();
 
@@ -260,6 +282,12 @@ namespace RedmineApp.Services.Implement
 
         public async Task<ApiResponse> RemoveMemberFromProjectAsync(int projectId, int userId)
         {
+            var project = await _projectRepository.GetByIdAsync(projectId);
+            if (project == null)
+            {
+                return ApiResponse.Response(404, "Không tìm thấy dự án!");
+            }
+            if (!CanManage(project)) return Forbidden();
             try
             {
                 var member = await _projectMemberRepository.GetByProjectAndUserAsync(projectId, userId);
@@ -288,6 +316,7 @@ namespace RedmineApp.Services.Implement
             {
                 return new ApiResponse { StatusCode = 404, Message = "Không tìm thấy dự án!" };
             }
+            if (!CanManage(project)) return Forbidden();
             project.Title = dto.Title;
             project.StartDate = dto.StartDate;
             project.EndDate = dto.EndDate;

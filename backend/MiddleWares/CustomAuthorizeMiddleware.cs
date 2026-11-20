@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using RedmineApp.Constants;
 using RedmineApp.Models.CommonModels;
 using RedmineApp.Repositories.Interfaces;
 using RedmineApp.Services.Interfaces;
@@ -85,22 +86,22 @@ namespace RedmineApp.MiddleWares
                 return;
             }
             var positionNames = user.Positions?.Select(p => p.Name).ToList() ?? new List<string>();
-            string selectedPosition = "Staff";
+            string selectedPosition = PositionNames.Staff;
             if (positionNames.Any()) // Kiểm tra xem danh sách có phần tử nào không
             {
-                if (positionNames.Contains("Admin", StringComparer.OrdinalIgnoreCase))
+                if (positionNames.Contains(PositionNames.Admin, StringComparer.OrdinalIgnoreCase))
                 {
-                    selectedPosition = "Admin";
+                    selectedPosition = PositionNames.Admin;
                 }
-                else if (positionNames.Contains("Project Manager", StringComparer.OrdinalIgnoreCase) ||
+                else if (positionNames.Contains(PositionNames.ProjectManager, StringComparer.OrdinalIgnoreCase) ||
                          positionNames.Contains("PM", StringComparer.OrdinalIgnoreCase))
                 {
-                    selectedPosition = "Project Manager";
+                    selectedPosition = PositionNames.ProjectManager;
                 }
                 else
                 {
                     // Dùng FirstOrDefault() thay vì First() để an toàn tuyệt đối
-                    selectedPosition = positionNames.FirstOrDefault() ?? "Staff";
+                    selectedPosition = positionNames.FirstOrDefault() ?? PositionNames.Staff;
                 }
             }
             Console.WriteLine(selectedPosition + "Permission");

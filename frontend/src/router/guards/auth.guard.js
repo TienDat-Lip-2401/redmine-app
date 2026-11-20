@@ -14,8 +14,11 @@ export const authGuard = (to, from) => {
   } else {
     if (!isAuthenticated) {
       return { name: ROUTE_NAMES.LOGIN };
-    } else {
-      return;
     }
+    // Trang chỉ dành cho Admin: người khác quay về Home (backend vẫn chặn API bằng 403)
+    if (to.matched.some((record) => record.meta.adminOnly) && !authStore.isAdmin) {
+      return { name: ROUTE_NAMES.HOME };
+    }
+    return;
   }
 };

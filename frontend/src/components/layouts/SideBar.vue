@@ -6,15 +6,22 @@ import IconPerformance from "@/assets/icons/Perfomance.svg";
 import IconUsers from "@/assets/icons/Setting.svg";
 import IconPositions from "@/assets/icons/Setting.svg";
 import IconRoles from "@/assets/icons/Setting.svg";
-const menuItems = [
+import { computed } from "vue";
+import { useAuthStore } from "@/stores/authStore";
+
+const authStore = useAuthStore();
+const allMenuItems = [
   { key: "projects", name: "Projects", icon: IconProject, path: "/projects" },
   { key: "tasks", name: "Tasks", icon: IconTasks, path: "/tasks" },
   { key: "work_logs", name: "Work Logs", icon: IconWorkLogs, path: "/work-logs" },
   { key: "performance", name: "Performance", icon: IconPerformance, path: "/performance" },
-  { key: "users", name: "Users", icon: IconUsers, path: "/users" },
-  { key: "positions", name: "Positions", icon: IconPositions, path: "/positions" },
-  { key: "roles", name: "Roles", icon: IconRoles, path: "/roles" },
+  { key: "users", name: "Users", icon: IconUsers, path: "/users", adminOnly: true },
+  { key: "positions", name: "Positions", icon: IconPositions, path: "/positions", adminOnly: true },
+  { key: "roles", name: "Roles", icon: IconRoles, path: "/roles", adminOnly: true },
 ];
+const menuItems = computed(() =>
+  allMenuItems.filter((item) => !item.adminOnly || authStore.isAdmin),
+);
 
 </script>
 

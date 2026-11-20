@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using RedmineApp.Constants;
 using RedmineApp.Filter;
 using RedmineApp.Models.CommonModels;
 using RedmineApp.Models.DtoModels.User;
@@ -22,6 +23,7 @@ namespace RedmineApp.Controllers
         }
         [HttpGet]
         [Route("get-all")]
+        [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> GetAll()
         {
             var users = await _userService.GetAllUserAsync();
@@ -29,38 +31,22 @@ namespace RedmineApp.Controllers
         }
         [HttpDelete]
         [Route("{id}")]
+        [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var response = await _userService.DeleteUserByIdAsync(id);
-            if (response.StatusCode == 404)
-            {
-                return NotFound(response);
-            }
-            return Ok(response);
+            return StatusCode(response.StatusCode, response);
         }
-        
+
         [HttpPut]
         [Route("{id}")]
         public async Task<IActionResult> UpdateUser(int id, UpdateUserRequestDto dto)
         {
-            int currentUserId = _commonService.GetUserId();
-            string currentUserPosition = _commonService.GetPosition();
-            if (currentUserPosition != "Admin" && currentUserId != id)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new
-                {
-                    StatusCode = 403,
-                    Message = "Bạn không có quyền sửa thông tin của người dùng này!",
-                });
-            }
+            // Quyền (Admin sửa ai cũng được, user chỉ sửa được thông tin cơ bản của chính mình) kiểm tra trong service
             var response = await _userService.UpdateUserAsync(id, dto);
-            if (response.StatusCode == 404) return NotFound(response);
-            if (response.StatusCode == 400) return BadRequest(response);
-            if (response.StatusCode == 500) return StatusCode(500, response);
-
-            return Ok(response);
+            return StatusCode(response.StatusCode, response);
         }
-        [AuthorizeRole(["Admin"])]
+        [AuthorizeRole(PositionNames.Admin)]
         [HttpPost]
         [Route("create")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDto dto)
@@ -103,7 +89,7 @@ namespace RedmineApp.Controllers
         }
         [HttpGet]
         [Route("{id}")]
-        [AuthorizeRole("Admin")]
+        [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> GetUserDetailById(int id)
         {
             var result = await _userService.GetUserByIdAsync(id);

@@ -3,7 +3,7 @@ export const roleRoutes = [
   {
     path: "/roles",
     component: () => import("@/layouts/DefaultLayout/DefaultLayout.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, adminOnly: true },
     children: [
       {
         path: "",

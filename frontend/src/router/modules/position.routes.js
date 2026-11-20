@@ -3,7 +3,7 @@ export const positionRoutes = [
   {
     path: "/positions",
     component: () => import("@/layouts/DefaultLayout/DefaultLayout.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, adminOnly: true },
     children: [
       {
         path: "",

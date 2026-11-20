@@ -1,10 +1,12 @@
 import { authService } from "@/services/auth";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 export const useAuthStore = defineStore("auth", () => {
   const savedUser = localStorage.getItem("user");
   const user = ref(savedUser ? JSON.parse(savedUser) : null);
   const isAuthenticated = ref(!!savedUser);
+  // Chỉ dùng để ẩn/hiện giao diện; backend vẫn kiểm tra quyền ở mọi request
+  const isAdmin = computed(() => !!user.value?.positions?.includes("Admin"));
   const setAuthData = (userData) => {
     isAuthenticated.value = true;
     user.value = userData;
@@ -59,5 +61,6 @@ export const useAuthStore = defineStore("auth", () => {
     clearFirstLoginFlag,
     refreshToken,
     isAuthenticated,
+    isAdmin,
   };
 });

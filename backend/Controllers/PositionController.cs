@@ -1,7 +1,9 @@
 ﻿
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RedmineApp.Constants;
 using RedmineApp.Filter;
+using RedmineApp.Models.CommonModels;
 using RedmineApp.Models.DtoModels.Position;
 using RedmineApp.Services.Interfaces;
 
@@ -29,6 +31,12 @@ namespace RedmineApp.Controllers
         [Route("user/{userId}")]
         public async Task<IActionResult> GetUserPositions(int userId)
         {
+            // Chỉ Admin hoặc chính user đó được xem chức vụ
+            if (_commonService.GetPosition() != PositionNames.Admin && _commonService.GetUserId() != userId)
+            {
+                var forbidden = ApiResponse.Response(403, "Bạn không có quyền xem chức vụ của người dùng này!");
+                return StatusCode(forbidden.StatusCode, forbidden);
+            }
             var res = await _positionService.GetPositionsByUserIdAsync(userId);
             return StatusCode(res.StatusCode, res);
         }
@@ -40,6 +48,7 @@ namespace RedmineApp.Controllers
         }
         [HttpGet]
         [Route("available/{userId}")]
+        [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> GetAvailablePositions(int userId)
         {
             var result = await _positionService.GetAvailablePositionsAsync(userId);
@@ -47,12 +56,13 @@ namespace RedmineApp.Controllers
         }
         [HttpPost]
         [Route("assign-list")]
+        [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> AddPositions(AssignPositionListRequestDto dto)
         {
             var result =await _positionService.AddPositionListToUserAsync(dto);
             return StatusCode(result.StatusCode, result);
         }
-        [AuthorizeRole("Admin")]
+        [AuthorizeRole(PositionNames.Admin)]
         [HttpDelete]
         [Route("remove-position")]
         public async Task<IActionResult> RemovePosition([FromBody] DeletePositionRequest dto)
