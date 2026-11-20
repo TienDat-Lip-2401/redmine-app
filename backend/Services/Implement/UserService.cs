@@ -14,13 +14,14 @@ namespace RedmineApp.Services.Implement
         private readonly ICommonService _commonService;
         private readonly IPositionRepository _positionRepository;
         private readonly IEmailService _emailService;
-        public UserService(IUserRepository userRepository, ICommonService commonService, IPositionRepository positionRepository, IEmailService emailService)
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
+        public UserService(IUserRepository userRepository, ICommonService commonService, IPositionRepository positionRepository, IEmailService emailService, IRefreshTokenRepository refreshTokenRepository)
         {
             _userRepository = userRepository;
             _commonService = commonService;
             _positionRepository = positionRepository;
             _emailService = emailService;
-
+            _refreshTokenRepository = refreshTokenRepository;
         }
         private string GenerateRandomPassword(int length = 12)
         {
@@ -52,6 +53,8 @@ namespace RedmineApp.Services.Implement
             {
                 return ApiResponse.Response(500, "Xóa User thất bại");
             }
+            // Thu hồi mọi phiên đăng nhập đang mở của user bị xoá
+            await _refreshTokenRepository.RevokeAllUserTokensAsync(id);
             return ApiResponse.Response(200, "Xóa User thành công");
         }
 
@@ -163,6 +166,11 @@ namespace RedmineApp.Services.Implement
                 await _userRepository.SaveChangesAsync();
                 return ApiResponse.Response(200, "Cập nhật User thành công");
             }
+            if (id == _commonService.GetUserId() && !dto.IsActive)
+            {
+                return ApiResponse.Response(400, "Bạn không thể tự khóa tài khoản của chính mình");
+            }
+            bool isBeingDeactivated = user.IsActive && !dto.IsActive;
             user.Code = dto.Code;
             user.Email = dto.Email;
             user.JoinedDate = dto.JoinedDate;
@@ -179,6 +187,11 @@ namespace RedmineApp.Services.Implement
                 }
             }
             await _userRepository.SaveChangesAsync();
+            if (isBeingDeactivated)
+            {
+                // Khoá tài khoản thì đá user ra khỏi mọi phiên đăng nhập ngay
+                await _refreshTokenRepository.RevokeAllUserTokensAsync(id);
+            }
             return ApiResponse.Response(200, "Cập nhật User thành công");
         }
 

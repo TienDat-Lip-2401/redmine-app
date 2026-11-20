@@ -50,7 +50,9 @@ namespace RedmineApp.Services.Implement
         public async Task<ApiResponse> LoginAsync(LoginRequestDto dto, string? ipAddress, string? userAgent)
         {
             var user = await _userRepository.GetByEmailAsync(dto.Email);
-            if(user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
+            // Tài khoản đã xoá hoặc bị khoá trả cùng thông báo, để không lộ trạng thái tài khoản
+            if(user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password)
+                || user.DeleteFlg || !user.IsActive)
             {
                 return ApiResponse.Response(400, "Sai tên đăng nhập hoặc mật khẩu!");
             }
@@ -134,7 +136,7 @@ namespace RedmineApp.Services.Implement
             {
                 return ApiResponse.Response(403, "Thẻ gia hạn đã hết hạn! Vui lòng đăng nhập lại.");
             }
-            if (existingToken.User.DeleteFlg)
+            if (existingToken.User.DeleteFlg || !existingToken.User.IsActive)
             {
                 return ApiResponse.Response(403, "Tài khoản của bạn đã bị khóa!");
             }

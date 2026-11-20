@@ -80,7 +80,7 @@ namespace RedmineApp.MiddleWares
             // Kiểm tra thông tin người dùng trong database
             var user = await userRepository.GetUserByIdAsync(userId);
 
-            if (user == null || user.DeleteFlg)
+            if (user == null || user.DeleteFlg || !user.IsActive)
             {
                 await WriteUnauthorized(context, "Tài khoản đã bị vô hiệu hóa.");
                 return;
