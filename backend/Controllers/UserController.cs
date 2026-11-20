@@ -29,6 +29,15 @@ namespace RedmineApp.Controllers
             var users = await _userService.GetAllUserAsync();
             return Ok(users);
         }
+        [HttpGet]
+        [Route("project-managers")]
+        [AuthorizeRole(PositionNames.Admin, PositionNames.ProjectManager)]
+        public async Task<IActionResult> GetProjectManagers()
+        {
+            var result = await _userService.GetProjectManagersAsync();
+            return StatusCode(result.StatusCode, result);
+        }
+
         [HttpDelete]
         [Route("{id}")]
         [AuthorizeRole(PositionNames.Admin)]

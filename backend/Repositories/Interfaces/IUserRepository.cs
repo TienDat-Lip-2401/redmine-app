@@ -13,6 +13,7 @@ namespace RedmineApp.Repositories.Interfaces
         Task<User?> GetUserDetailByIdAsync(int id);
         Task<List<Position>> GetPositionsByIdsAsync(List<int> ids);
         Task<List<User>> GetUsersNotInProjectAsync(int projectId);
+        Task<List<User>> GetActiveUsersByPositionAsync(string positionName);
         Task UpdateUserAsync(User user);
     }
 }

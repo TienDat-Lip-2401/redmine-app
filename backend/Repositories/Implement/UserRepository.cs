@@ -51,6 +51,15 @@ namespace RedmineApp.Repositories.Implement
                 .FirstOrDefaultAsync(u => u.Id == id && !u.DeleteFlg);
         }
 
+        public async Task<List<User>> GetActiveUsersByPositionAsync(string positionName)
+        {
+            return await _context.Users
+                .Where(u => !u.DeleteFlg && u.IsActive)
+                .Where(u => u.Positions.Any(p => !p.DeleteFlg && p.Name == positionName))
+                .OrderBy(u => u.Name)
+                .ToListAsync();
+        }
+
         public async Task<List<User>> GetUsersNotInProjectAsync(int projectId)
         {
             return await _context.Users

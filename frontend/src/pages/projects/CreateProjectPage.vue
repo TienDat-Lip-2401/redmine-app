@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import BaseInput from "@/components/common/BaseInput.vue";
@@ -8,10 +8,13 @@ import ConfirmModal from "@/components/common/ConfirmModal.vue";
 import BaseLoading from "@/components/common/BaseLoading.vue";
 import { useProjectStore } from "@/stores/projectStore.js";
 import { useModalStore } from "@/stores/modalStore";
+import { useRoleStore } from "@/stores/roleStore";
+import { userService } from "@/services/user";
 import trashIcon from "@/assets/icons/trash.svg";
 
 const { t } = useI18n();
 const projectStore = useProjectStore();
+const roleStore = useRoleStore();
 const router = useRouter();
 const isModalOpen = ref(false);
 const isLoading = ref(false);
@@ -36,15 +39,17 @@ const form = ref({
     { label: "Bugs", current: Math.ceil(Math.random() * 100), total: 100 },
   ],
 });
-const getRoleName = (roleId) => {
-  const roles = {
-    1: "Backend Developer",
-    2: "FrontEnd Developer",
-    3: "Project Manager",
-    4: "Tester",
-  };
-  return roles[roleId] || "Member";
-};
+const getRoleName = (roleId) => roleStore.getRoleName(roleId);
+// Danh sách user có chức vụ Project Manager cho dropdown chọn người quản lý
+const projectManagers = ref([]);
+onMounted(async () => {
+  try {
+    const [pmRes] = await Promise.all([userService.getProjectManagers(), roleStore.fetchRoles()]);
+    projectManagers.value = pmRes.data || [];
+  } catch (error) {
+    console.error("Lỗi tải danh sách PM / vai trò:", error);
+  }
+});
 const triggerDelete = (index) => {
   memberIndexToDelete.value = index;
   isConfirmOpen.value = true;
@@ -150,10 +155,7 @@ const handleSave = async () => {
         <label class="field-label">{{ $t("projects.manager") }}</label>
         <select v-model="form.pmId" class="field-select">
           <option value="">{{ $t("projects.manager_placeholder") }}</option>
-          <option value="13">PM-01</option>
-          <option value="14">PM-02</option>
-          <option value="15">PM-03</option>
-          <option value="16">PM-04</option>
+          <option v-for="pm in projectManagers" :key="pm.id" :value="pm.id">{{ pm.name }} ({{ pm.email }})</option>
         </select>
       </div>
       <div class="members-section">

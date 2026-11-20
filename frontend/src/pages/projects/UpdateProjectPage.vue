@@ -1,15 +1,20 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import BaseInput from "@/components/common/BaseInput.vue";
 import AddMemberModal from "@/components/project/AddMemberModal.vue";
 import ConfirmModal from "@/components/common/ConfirmModal.vue";
 import { useProjectStore } from "@/stores/projectStore.js";
+import { useRoleStore } from "@/stores/roleStore";
+import { useAuthStore } from "@/stores/authStore";
+import { userService } from "@/services/user";
 import trashIcon from "@/assets/icons/trash.svg";
 
 const { t } = useI18n();
 const projectStore = useProjectStore();
+const roleStore = useRoleStore();
+const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 //
@@ -30,15 +35,18 @@ const confirmDelete = async () => {
     memberIndexToDelete.value = null;
   }
 };
-const getRoleName = (roleId) => {
-  const roles = {
-    1: "Backend Developer",
-    2: "FrontEnd Developer",
-    3: "Project Manager",
-    4: "Tester",
-  };
-  return roles[String(roleId)] || "Member";
-};
+const getRoleName = (roleId) => roleStore.getRoleName(roleId);
+// Danh sách user có chức vụ Project Manager; chỉ Admin được đổi người quản lý
+const projectManagers = ref([]);
+// Người quản lý hiện tại có thể không còn là PM (vd. Admin tạo dự án) -> vẫn hiển thị để không mất giá trị
+const managerOptions = computed(() => {
+  const list = [...projectManagers.value];
+  const currentId = Number(form.value.pmId);
+  if (currentId && !list.some((pm) => pm.id === currentId)) {
+    list.unshift({ id: currentId, name: t("projects.current_manager", { id: currentId }), email: null });
+  }
+  return list;
+});
 const onAddMembers = (selectedList) => {
   if (!selectedList || selectedList.length === 0) return;
   selectedList.forEach((newMember) => {
@@ -100,6 +108,12 @@ const formatDateForInput = (dateString) => {
 onMounted(async () => {
   const projectId = route.params.id;
   currentProjectId.value = projectId;
+  try {
+    const [pmRes] = await Promise.all([userService.getProjectManagers(), roleStore.fetchRoles()]);
+    projectManagers.value = pmRes.data || [];
+  } catch (error) {
+    console.error("Lỗi tải danh sách PM / vai trò:", error);
+  }
   if (projectId) {
     try {
       await projectStore.fetchProjectDetail(projectId);
@@ -144,12 +158,11 @@ onMounted(async () => {
 
       <div class="field-container">
         <label class="field-label">{{ $t("projects.manager") }}</label>
-        <select v-model="form.pmId" class="field-select">
+        <select v-model="form.pmId" class="field-select" :disabled="!authStore.isAdmin">
           <option value="">{{ $t("projects.manager_placeholder") }}</option>
-          <option value="13">PM-01</option>
-          <option value="14">PM-02</option>
-          <option value="15">PM-03</option>
-          <option value="16">PM-04</option>
+          <option v-for="pm in managerOptions" :key="pm.id" :value="pm.id">
+            {{ pm.name }}<template v-if="pm.email"> ({{ pm.email }})</template>
+          </option>
         </select>
       </div>
       <div class="members-section">

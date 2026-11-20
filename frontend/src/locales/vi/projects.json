@@ -14,6 +14,7 @@
     "code_placeholder": "Nhập mã dự án...",
     "title_placeholder": "Nhập tên dự án...",
     "manager_placeholder": "Chọn quản lý...",
+    "current_manager": "Người quản lý hiện tại (#{id})",
     "confirm_delete_project": "Bạn có chắc chắn muốn xóa dự án này không?",
     "delete_success": "Đã xóa dự án thành công!",
     "delete_failed": "Xóa dự án thất bại. Vui lòng thử lại!",

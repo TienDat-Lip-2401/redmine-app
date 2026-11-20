@@ -18,6 +18,10 @@ export const userService = {
   getById: (id) => {
     return http.get(`/user/${id}`);
   },
+  // User đang hoạt động có chức vụ Project Manager (Admin, PM)
+  getProjectManagers: () => {
+    return http.get("/user/project-managers");
+  },
   getMyProfile: () => {
     return http.get(`user/my-profile`);
   },

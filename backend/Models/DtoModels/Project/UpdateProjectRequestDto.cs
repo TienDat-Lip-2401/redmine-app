@@ -9,6 +9,7 @@
         public int Status { get; set; }
         public bool IsPublic { get; set; }
         public bool IsActive { get; set; }
+        public int? ProjectManagerId { get; set; }
         public List<UpdateMemberDto> MemberIds { get; set; }
     }
 }

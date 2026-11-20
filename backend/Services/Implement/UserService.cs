@@ -58,6 +58,19 @@ namespace RedmineApp.Services.Implement
             return ApiResponse.Response(200, "Xóa User thành công");
         }
 
+        // Danh sách user đang hoạt động có chức vụ Project Manager, dùng cho dropdown chọn PM của dự án
+        public async Task<ApiResponse> GetProjectManagersAsync()
+        {
+            var users = await _userRepository.GetActiveUsersByPositionAsync(PositionNames.ProjectManager);
+            var result = users.Select(u => new AvailableUserDto
+            {
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+            }).ToList();
+            return ApiResponse.Response(200, "Thành công", result);
+        }
+
         public async Task<ApiResponse> GetAllUserAsync()
         {
             var users = await _userRepository.GetAllAsync();

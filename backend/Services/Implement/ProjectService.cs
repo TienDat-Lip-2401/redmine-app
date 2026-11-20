@@ -32,6 +32,13 @@ namespace RedmineApp.Services.Implement
             _commonService.GetPosition() == PositionNames.Admin
             || project.ManagerId == _commonService.GetUserId();
 
+        // PM của dự án phải là user đang hoạt động và có chức vụ Project Manager
+        private async Task<bool> IsValidProjectManagerAsync(int userId)
+        {
+            var managers = await _userRepository.GetActiveUsersByPositionAsync(PositionNames.ProjectManager);
+            return managers.Any(u => u.Id == userId);
+        }
+
         // Xem dự án: người quản lý hoặc thành viên của dự án
         private async Task<bool> CanViewAsync(Project project) =>
             CanManage(project)
@@ -76,6 +83,13 @@ namespace RedmineApp.Services.Implement
                 {
                     return ApiResponse.Response(400, "Ngày bắt đầu không được lớn hơn ngày kết thúc!");
                 }
+                // Frontend gửi 0 khi chưa chọn PM: khi đó người tạo dự án là người quản lý.
+                // Ngoài người tạo, người quản lý phải là user có chức vụ Project Manager.
+                int? managerId = dto.ProjectManagerId > 0 ? dto.ProjectManagerId : null;
+                if (managerId != null && managerId != currentUserId && !await IsValidProjectManagerAsync(managerId.Value))
+                {
+                    return ApiResponse.Response(400, "Người quản lý được chọn không phải Project Manager đang hoạt động!");
+                }
                 var newProject = new Project
                 {
                     ProjectCode = dto.ProjectCode,
@@ -83,7 +97,7 @@ namespace RedmineApp.Services.Implement
                     Description = dto.Description,
                     StartDate = dto.StartDate,
                     EndDate = dto.EndDate,
-                    ManagerId = dto.ProjectManagerId ?? currentUserId,
+                    ManagerId = managerId ?? currentUserId,
                     Status = dto.Status ?? 1,
                     IsPublic = dto.IsPublic ?? false,
                     IsActive = dto.IsActive ?? true,
@@ -317,6 +331,16 @@ namespace RedmineApp.Services.Implement
                 return new ApiResponse { StatusCode = 404, Message = "Không tìm thấy dự án!" };
             }
             if (!CanManage(project)) return Forbidden();
+            // Đổi người quản lý: chỉ Admin. 0/null nghĩa là giữ nguyên.
+            if (dto.ProjectManagerId > 0 && dto.ProjectManagerId != project.ManagerId)
+            {
+                if (_commonService.GetPosition() != PositionNames.Admin) return Forbidden();
+                if (!await IsValidProjectManagerAsync(dto.ProjectManagerId.Value))
+                {
+                    return ApiResponse.Response(400, "Người quản lý được chọn không phải Project Manager đang hoạt động!");
+                }
+                project.ManagerId = dto.ProjectManagerId;
+            }
             project.Title = dto.Title;
             project.StartDate = dto.StartDate;
             project.EndDate = dto.EndDate;
