@@ -21,6 +21,7 @@ namespace RedmineApp.Repositories.Implement
         public async Task<Project?> GetProjectDetailAsync(int projectId)
         {
             return await _context.Projects
+                .Include(p => p.Manager)
                 .Include(p => p.ProjectMembers)
                     .ThenInclude(pm => pm.Role)
                 .Include(p => p.ProjectMembers)
@@ -62,6 +63,7 @@ namespace RedmineApp.Repositories.Implement
             }
 
             return await query
+                .Include(p => p.Manager)
                 .Include(p => p.ProjectMembers)
                     .ThenInclude(pm => pm.Role)
                 .Include(p => p.ProjectMembers)

@@ -40,9 +40,29 @@ const formatDate = (dateString) => {
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
 };
-const randomNumber = () => {
-  return Math.floor(Math.random() * 101);
+const STATUS_COMPLETED = 2;
+const DAY_MS = 24 * 60 * 60 * 1000;
+// Mốc 0h theo giờ địa phương, để tính chênh lệch theo ngày (không theo giờ)
+const startOfDay = (value) => {
+  const d = new Date(value);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 };
+// Math.round để không lệch 1 ngày khi đi qua giờ mùa hè/đông
+const daysBetween = (from, to) => Math.round((to - from) / DAY_MS);
+
+// Tiến độ theo thời gian: số liệu thật duy nhất có được khi chưa có module Task
+const timeline = computed(() => {
+  if (Number(props.project.status) === STATUS_COMPLETED) return { kind: "completed", percent: 100 };
+  const start = startOfDay(props.project.startDate);
+  const end = startOfDay(props.project.endDate);
+  const today = startOfDay(Date.now());
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+  if (today < start) return { kind: "upcoming", percent: 0 };
+  if (today > end) return { kind: "overdue", percent: 100, days: daysBetween(end, today) };
+  const totalDays = Math.max(1, daysBetween(start, end));
+  const percent = Math.min(100, Math.round((daysBetween(start, today) / totalDays) * 100));
+  return { kind: "running", percent, days: daysBetween(today, end) };
+});
 const getStatusLabel = (status) => {
   const statusMap = {
     0: "Active",
@@ -51,9 +71,6 @@ const getStatusLabel = (status) => {
   };
   return statusMap[Number(status)] || "Active";
 };
-const progressPercent = randomNumber();
-const tasksPercent = randomNumber();
-const bugsPercent = randomNumber();
 </script>
 
 <template>
@@ -78,16 +95,17 @@ const bugsPercent = randomNumber();
     </div>
     <!-- Body -->
     <div class="card-body">
-      <p class="pm-text">
-        PM: <span>PM-{{ project.projectManagerId }}</span>
+      <p class="pm-text" data-testid="project-manager">
+        {{ $t('projects.manager') }}: <span>{{ project.projectManagerName || '—' }}</span>
       </p>
       <div class="members-section">
         <span class="members-label">{{ $t('projects.members') }}:</span>
         <div class="avatar-group">
           <div
             v-for="(member, index) in project.members.slice(0, 4)"
-            :key="member.id"
+            :key="member.userId"
             class="avatar-item"
+            :title="member.userName"
             :style="{ zIndex: 10 - index }"
           >
             <img v-if="member.avatar" :src="member.avatar" :alt="member.userName" />
@@ -101,37 +119,23 @@ const bugsPercent = randomNumber();
           </div>
         </div>
       </div>
-      <div class="stat-list">
-        <div class="stat-item">
+      <!-- Số liệu Nhiệm vụ/Lỗi sẽ thêm khi có module Task; hiện chỉ hiện tiến độ theo thời gian -->
+      <div v-if="timeline" class="stat-list">
+        <div class="stat-item" data-testid="timeline" :data-kind="timeline.kind">
           <div class="stat-label">
-            <span>{{ $t('common.progress') }}:</span>
-            <span>75%</span>
+            <span>{{ $t('projects.timeline_progress') }}:</span>
+            <span :class="['timeline-text', timeline.kind]">
+              {{ $t(`projects.timeline_${timeline.kind}`, { percent: timeline.percent, days: timeline.days }) }}
+            </span>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
-          </div>
-        </div>
-
-        <div class="stat-item">
-          <div class="stat-label">
-            <span>{{ $t('common.tasks') }}:</span>
-            <span>42/50</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: tasksPercent + '%' }"></div>
-          </div>
-        </div>
-
-        <div class="stat-item">
-          <div class="stat-label">
-            <span>{{ $t('common.bugs') }}:</span>
-            <span>3/15</span>
-          </div>
-          <div class="progress-bar">
-            <div
-              class="progress-fill"
-              :style="{ width: bugsPercent + '%', backgroundColor: '#ef4444' }"
-            ></div>
+          <div
+            class="progress-bar"
+            role="progressbar"
+            :aria-valuenow="timeline.percent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <div :class="['progress-fill', timeline.kind]" :style="{ width: timeline.percent + '%' }"></div>
           </div>
         </div>
       </div>
@@ -287,7 +291,7 @@ const bugsPercent = randomNumber();
   z-index: 1;
 }
 /* Stats */
-.stats-list {
+.stat-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -312,6 +316,19 @@ const bugsPercent = randomNumber();
   height: 100%;
   background: #dc3545;
   border-radius: 4px;
+}
+.progress-fill.overdue {
+  background: #7f1d1d;
+}
+.progress-fill.completed {
+  background: #16a34a;
+}
+.timeline-text.overdue {
+  color: #b91c1c;
+  font-weight: 700;
+}
+.timeline-text.completed {
+  color: #15803d;
 }
 .card-footer {
   display: flex;

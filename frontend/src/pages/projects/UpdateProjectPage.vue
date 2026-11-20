@@ -40,12 +40,15 @@ const confirmDelete = async () => {
 const getRoleName = (roleId) => roleStore.getRoleName(roleId);
 // Danh sách user có chức vụ Project Manager; chỉ Admin được đổi người quản lý
 const projectManagers = ref([]);
+// Tên người quản lý hiện tại (từ API chi tiết dự án)
+const currentManagerName = ref("");
 // Người quản lý hiện tại có thể không còn là PM (vd. Admin tạo dự án) -> vẫn hiển thị để không mất giá trị
 const managerOptions = computed(() => {
   const list = [...projectManagers.value];
   const currentId = Number(form.value.pmId);
   if (currentId && !list.some((pm) => pm.id === currentId)) {
-    list.unshift({ id: currentId, name: t("projects.current_manager", { id: currentId }), email: null });
+    const name = currentManagerName.value || `#${currentId}`;
+    list.unshift({ id: currentId, name: t("projects.current_manager", { name }), email: null });
   }
   return list;
 });
@@ -132,6 +135,7 @@ onMounted(async () => {
         form.value.endDate = formatDateForInput(projectDetail.endDate);
         form.value.description = projectDetail.description;
         form.value.pmId = projectDetail.projectManagerId;
+        currentManagerName.value = projectDetail.projectManagerName || "";
         form.value.members = projectDetail.members;
         form.value.isActive = projectDetail.isActive;
         form.value.status = projectDetail.status;
