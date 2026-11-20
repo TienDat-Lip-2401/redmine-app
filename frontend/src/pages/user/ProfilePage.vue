@@ -156,9 +156,10 @@ const handleSave = async () => {
       email: form.email,
       phoneNumber: form.phoneNumber,
       gender: form.gender,
-      birthday: form.birthday,
-      joinedDate: form.joinedDate,
-      leavedDate: form.leavedDate,
+      // Ô ngày để trống là "" -> gửi null (backend không đọc được chuỗi rỗng thành ngày)
+      birthday: form.birthday || null,
+      joinedDate: form.joinedDate || null,
+      leavedDate: form.leavedDate || null,
       isActive: form.isActive,
       // Gửi danh sách positions (Backend của bạn đang xử lý list object hoặc list ID)
       positions: positions.value.map((p) => ({

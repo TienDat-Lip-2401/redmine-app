@@ -40,12 +40,8 @@ namespace RedmineApp.Controllers
         [AuthorizeRole(PositionNames.Admin)]
         public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequestDto dto)
         {
-            int currentUserId = _commonService.GetUserId();
-            if (currentUserId <= 0)
-            {
-                return Unauthorized(new { StatusCode = 401, Message = "Phiên đăng nhập không hợp lệ hoặc đã hết hạn!" });
-            }
-            var result = await _projectService.CreateProjectAsync(currentUserId, dto);
+            // CustomAuthorizeMiddleware đã chặn request chưa đăng nhập; dữ liệu đã được validate theo DTO
+            var result = await _projectService.CreateProjectAsync(_commonService.GetUserId(), dto);
             return StatusCode(result.StatusCode, result);
         }
         [HttpPost]
@@ -54,7 +50,8 @@ namespace RedmineApp.Controllers
         {
             if (dtos == null || !dtos.Any())
             {
-                return BadRequest(new { StatusCode = 400, Message = "Danh sách thành viên không được để trống" });
+                var empty = ApiResponse.Response(400, "Danh sách thành viên không được để trống");
+                return StatusCode(empty.StatusCode, empty);
             }
             var result = await _projectService.AddMembersToProjectAsync(projectId, dtos);
             return StatusCode(result.StatusCode, result);
@@ -77,15 +74,6 @@ namespace RedmineApp.Controllers
         [Route("{projectId}")]
         public async Task<IActionResult> UpdateProject(int projectId, [FromBody] UpdateProjectRequestDto dto)
         {
-            var currentUserId = _commonService.GetUserId();
-            if (currentUserId <= 0)
-            {
-                return Unauthorized(new { StatusCode = 401, Message = "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn!" });
-            }
-            if (dto == null)
-            {
-                return BadRequest(new { StatusCode = 400, Message = "Dữ liệu gửi lên không hợp lệ!" });
-            }
             var result = await _projectService.UpdateProjectAsync(projectId, dto);
             return StatusCode(result.StatusCode, result);
         }

@@ -8,6 +8,7 @@ import ConfirmModal from "@/components/common/ConfirmModal.vue";
 import { useProjectStore } from "@/stores/projectStore.js";
 import { useRoleStore } from "@/stores/roleStore";
 import { useAuthStore } from "@/stores/authStore";
+import { useModalStore } from "@/stores/modalStore";
 import { userService } from "@/services/user";
 import trashIcon from "@/assets/icons/trash.svg";
 
@@ -15,6 +16,7 @@ const { t } = useI18n();
 const projectStore = useProjectStore();
 const roleStore = useRoleStore();
 const authStore = useAuthStore();
+const modalStore = useModalStore();
 const route = useRoute();
 const router = useRouter();
 //
@@ -81,11 +83,14 @@ const handleSave = async () => {
         roleId: parseInt(m.roleId),
       })),
     };
-    console.log(projectPayload);
     await projectStore.updateProject(currentProjectId.value, projectPayload);
     router.push("/projects");
   } catch (error) {
-    console.error("Lỗi khi load dữ liệu:", error);
+    modalStore.showModal({
+      title: t("common.alert.failed"),
+      message: error.response?.data?.message || t("projects.update_failed"),
+      type: "error",
+    });
   }
 };
 

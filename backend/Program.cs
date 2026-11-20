@@ -1,10 +1,14 @@
 using RedmineApp;
+using RedmineApp.Filter;
 using RedmineApp.MiddleWares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    // Lỗi validation trả ApiResponse 400 thay vì ProblemDetails, để frontend luôn đọc được response.data.message
+    .ConfigureApiBehaviorOptions(options =>
+        options.InvalidModelStateResponseFactory = ValidationErrorResponse.Create);
 builder.Services.AddSwaggerGen();
 builder.Services.AddServices(builder.Configuration);
 builder.Services.AddHttpContextAccessor();

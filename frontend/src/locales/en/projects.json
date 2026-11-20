@@ -19,6 +19,7 @@
     "delete_success": "Project deleted successfully!",
     "delete_failed": "Failed to delete project. Please try again!",
     "create_failed": "An error occurred while creating project. Please try again!",
+    "update_failed": "An error occurred while updating project. Please try again!",
     "edit_success": "Project updated successfully!"
   }
 }

@@ -19,6 +19,7 @@
     "delete_success": "Đã xóa dự án thành công!",
     "delete_failed": "Xóa dự án thất bại. Vui lòng thử lại!",
     "create_failed": "Đã xảy ra lỗi khi tạo dự án. Vui lòng thử lại!",
+    "update_failed": "Đã xảy ra lỗi khi cập nhật dự án. Vui lòng thử lại!",
     "edit_success": "Cập nhật dự án thành công!"
   }
 }

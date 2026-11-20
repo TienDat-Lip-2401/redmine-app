@@ -77,10 +77,6 @@ namespace RedmineApp.Services.Implement
 
         public async Task<ApiResponse> CreateProjectAsync(int currentUserId, CreateProjectRequestDto dto)
         {
-            if (dto.StartDate > dto.EndDate)
-            {
-                return ApiResponse.Response(400, "Ngày bắt đầu không được lớn hơn ngày kết thúc!");
-            }
             // Frontend gửi 0 khi chưa chọn PM: khi đó người tạo dự án là người quản lý.
             // Ngoài người tạo, người quản lý phải là user có chức vụ Project Manager.
             int? managerId = dto.ProjectManagerId > 0 ? dto.ProjectManagerId : null;
@@ -93,8 +89,8 @@ namespace RedmineApp.Services.Implement
                 ProjectCode = dto.ProjectCode,
                 Title = dto.Title,
                 Description = dto.Description,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
+                StartDate = dto.StartDate!.Value,
+                EndDate = dto.EndDate!.Value,
                 ManagerId = managerId ?? currentUserId,
                 Status = dto.Status ?? 1,
                 IsPublic = dto.IsPublic ?? false,
@@ -309,8 +305,8 @@ namespace RedmineApp.Services.Implement
                 project.ManagerId = dto.ProjectManagerId;
             }
             project.Title = dto.Title;
-            project.StartDate = dto.StartDate;
-            project.EndDate = dto.EndDate;
+            project.StartDate = dto.StartDate!.Value;
+            project.EndDate = dto.EndDate!.Value;
             project.Description = dto.Description;
             project.Status = dto.Status;
             project.IsPublic = dto.IsPublic;
