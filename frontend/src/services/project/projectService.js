@@ -7,8 +7,9 @@ export const projectService = {
   },
 
   // 2. Lấy danh sách dự án của tài khoản đang đăng nhập
+  // Trả về ApiResponse.data = { data: [...], totalItems, totalPages, currentPage, pageSize }
   getMyProjects: (page, size, search) => {
-    return http.get(`/project/my-projects?page=${page}&size=${size}&search=${search}`);
+    return http.get("/project/my-projects", { params: { page, size, search: search || undefined } });
   },
 
   // 3. Tạo dự án mới (có thể gửi kèm mảng member ban đầu)

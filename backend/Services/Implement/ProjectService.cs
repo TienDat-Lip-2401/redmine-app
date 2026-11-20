@@ -250,26 +250,14 @@ namespace RedmineApp.Services.Implement
             return ApiResponse.Response(200, "Lấy danh sách dự án của người dùng thành công", projectDtos);
         }
 
-        public async Task<ApiResponse> GetProjectsForCurrentUserAsync()
+        public async Task<ApiResponse> GetProjectsForCurrentUserAsync(int page, int size, string? search)
         {
             int userId = _commonService.GetUserId();
-            var user = await _userRepository.GetUserByIdAsync(userId);
-            if (user == null)
-            {
-                return ApiResponse.Response(404, "Không tìm thấy thông tin tài khoản!");
-            }
-            var currentPositionUser = _commonService.GetPosition();
-            List<Project> projects;
-            if (currentPositionUser == PositionNames.Admin)
-            {
-                projects = await _projectRepository.GetAllAsync();
+            // Admin xem tất cả; người khác xem dự án mình là thành viên hoặc quản lý
+            int? scopeUserId = _commonService.GetPosition() == PositionNames.Admin ? null : userId;
+            var projects = await _projectRepository.GetPagedProjectsAsync(scopeUserId, search, page, size);
 
-            }
-            else
-            {
-                projects = await _projectRepository.GetProjectsByUserIdAsync(userId);
-            }
-            var projectDtos = projects.Select(projectEntity => new ProjectResponseDto
+            var result = projects.Map(projectEntity => new ProjectResponseDto
             {
                 Id = projectEntity.Id,
                 Title = projectEntity.Title,
@@ -280,6 +268,7 @@ namespace RedmineApp.Services.Implement
                 Description = projectEntity.Description,
                 ProjectManagerId = projectEntity.ManagerId,
                 isActive = projectEntity.IsActive,
+                isPublic = projectEntity.IsPublic,
                 Status = projectEntity.Status,
                 Members = projectEntity.ProjectMembers.Select(pm => new ProjectMemberDto
                 {
@@ -290,8 +279,8 @@ namespace RedmineApp.Services.Implement
                     RoleId = pm.RoleId,
                     RoleName = pm.Role?.Name ?? "Unknown"
                 }).ToList()
-            }).ToList();
-            return ApiResponse.Response(200, "Lấy danh sách dự án thành công!", projectDtos);
+            });
+            return ApiResponse.Response(200, "Lấy danh sách dự án thành công!", result);
         }
 
         public async Task<ApiResponse> RemoveMemberFromProjectAsync(int projectId, int userId)

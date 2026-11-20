@@ -16,7 +16,7 @@ const projectStore = useProjectStore();
 const currentPage = ref(Number(route.query.page) || 1);
 // --- Tìm kiếm ---
 const searchQuery = ref(route.query.search || "");
-const debouncedSearchQuery = ref("");
+const debouncedSearchQuery = ref(searchQuery.value);
 let debounceTimeout = null;
 // --- Phân trang ---
 const itemsPerPage = ref(Number(route.query.size) || 6);
@@ -71,6 +71,13 @@ watch(
     });
   },
   { immediate: true },
+);
+// Backend lùi về trang cuối khi trang đang xem không còn dữ liệu (vd. sau khi xoá) -> đồng bộ lại số trang
+watch(
+  () => projectStore.currentPage,
+  (serverPage) => {
+    if (serverPage && serverPage !== currentPage.value) currentPage.value = serverPage;
+  },
 );
 const totalPages = computed(() => projectStore.totalPages);
 const totalItems = computed(() => projectStore.totalItems);

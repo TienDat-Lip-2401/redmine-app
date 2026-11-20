@@ -14,7 +14,7 @@ namespace RedmineApp.Services.Interfaces
         // Xóa 1 thành viên khỏi dự án
         Task<ApiResponse> RemoveMemberFromProjectAsync(int projectId, int userId);
         Task<ApiResponse> GetAvailableUsersForProjectAsync(int projectId);
-        Task<ApiResponse> GetProjectsForCurrentUserAsync();
+        Task<ApiResponse> GetProjectsForCurrentUserAsync(int page, int size, string? search);
         Task<ApiResponse> UpdateProjectAsync(int projectId, UpdateProjectRequestDto dto);
         Task<ApiResponse> DeleteProjectByIdAsync(int projectId);
     }

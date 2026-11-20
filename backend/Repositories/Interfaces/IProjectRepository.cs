@@ -1,4 +1,5 @@
-﻿using RedmineApp.Models.EntityModels;
+﻿using RedmineApp.Models.CommonModels;
+using RedmineApp.Models.EntityModels;
 
 namespace RedmineApp.Repositories.Interfaces
 {
@@ -6,6 +7,7 @@ namespace RedmineApp.Repositories.Interfaces
     {
         Task<Project?> GetProjectDetailAsync(int projectId);
         Task<List<Project>> GetProjectsByUserIdAsync(int userId);
+        Task<PagedResult<Project>> GetPagedProjectsAsync(int? userId, string? search, int page, int size);
         void RemoveMembers(IEnumerable<ProjectMember> members);
         void AddMember(ProjectMember member);
     }

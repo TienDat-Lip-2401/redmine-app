@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RedmineApp.Constants;
 using RedmineApp.Filter;
+using RedmineApp.Models.CommonModels;
 using RedmineApp.Models.DtoModels.Project;
 using RedmineApp.Models.DtoModels.ProjectMember;
 using RedmineApp.Services.Interfaces;
@@ -27,16 +28,12 @@ namespace RedmineApp.Controllers
         }
         [HttpGet]
         [Route("my-projects")]
-        public async Task<IActionResult> GetMyProjects()
+        public async Task<IActionResult> GetMyProjects(
+            [FromQuery] int page = 1,
+            [FromQuery] int size = PagedResult<object>.DefaultPageSize,
+            [FromQuery] string? search = null)
         {
-            
-            int currentUserId = _commonService.GetUserId();
-            if (currentUserId <= 0)
-            {
-                return Unauthorized(new { StatusCode = 401, Message = "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn!" });
-            }
-
-            var result = await _projectService.GetProjectsForCurrentUserAsync();
+            var result = await _projectService.GetProjectsForCurrentUserAsync(page, size, search);
             return StatusCode(result.StatusCode, result);
         }
         [HttpPost]

@@ -11,26 +11,30 @@ export const useProjectStore = defineStore("project", {
     totalPages: 0,
     currentPage: 1,
     pageSize: 6,
+    search: "",
+    lastRequestId: 0,
   }),
   actions: {
-    async fetchProjects(page = 1, size = 6,search = "", forceRefresh = false) {
-      if (this.isLoading) return;
-
+    // Không chặn khi đang tải: request mới nhất luôn thắng, response cũ về sau bị bỏ qua
+    async fetchProjects(page = this.currentPage, size = this.pageSize, search = this.search) {
+      const requestId = ++this.lastRequestId;
       this.isLoading = true;
       try {
         const res = await projectService.getMyProjects(page, size, search);
-        const responseData = res.data;
-        this.projects = responseData.data;
-        this.totalItems = responseData.totalItems;
-        this.totalPages = responseData.totalPages;
-        this.currentPage = responseData.currentPage;
-        this.pageSize = size;
+        if (requestId !== this.lastRequestId) return res;
+        const paged = res.data || {};
+        this.projects = paged.data || [];
+        this.totalItems = paged.totalItems || 0;
+        this.totalPages = paged.totalPages || 1;
+        this.currentPage = paged.currentPage || 1;
+        this.pageSize = paged.pageSize || size;
+        this.search = search;
         return res;
       } catch (error) {
         console.error("Fetch projects failed:", error);
         throw error;
       } finally {
-        this.isLoading = false;
+        if (requestId === this.lastRequestId) this.isLoading = false;
       }
     },
     async fetchProjectDetail(projectId) {
@@ -60,12 +64,11 @@ export const useProjectStore = defineStore("project", {
     },
     async deleteProject(projectId) {
       try {
-        // Giả sử projectService có hàm delete
         const res = await projectService.delete(projectId);
 
         if (res.statusCode === 200) {
-          // Xóa thành công thì lọc bỏ khỏi state hiện tại cho UI mượt mà
-          await this.fetchProjects(this.currentPage, 6, true);
+          // Tải lại trang hiện tại với cùng cỡ trang và từ khoá (backend tự lùi về trang cuối nếu trang này đã trống)
+          await this.fetchProjects();
         }
         return res;
       } catch (error) {
@@ -111,20 +114,6 @@ export const useProjectStore = defineStore("project", {
       this.isLoading = true;
       try {
         const res = await projectService.update(projectId, projectData);
-        return res;
-      } catch (error) {
-        throw error;
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async deleteProject(projectId) {
-      this.isLoading = true;
-      try {
-        const res = await projectService.delete(projectId);
-        if (res.statusCode === 200) {
-          this.projects = this.projects.filter((p) => p.id !== projectId);
-        }
         return res;
       } catch (error) {
         throw error;
