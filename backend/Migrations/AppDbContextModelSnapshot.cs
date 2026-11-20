@@ -48,6 +48,40 @@ namespace RedmineApp.Migrations
                         .HasName("PK__Position__3214EC0773107990");
 
                     b.ToTable("Positions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "Admin",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "Project Manager",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "Developer",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "Tester",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("RedmineApp.Models.EntityModels.Project", b =>
@@ -211,6 +245,40 @@ namespace RedmineApp.Migrations
                         .HasName("PK__Roles__3214EC07DA745F4D");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "Backend Developer",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "FrontEnd Developer",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "Project Manager",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Name = "Tester",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("RedmineApp.Models.EntityModels.User", b =>
@@ -283,6 +351,21 @@ namespace RedmineApp.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Code = "ADM001",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlg = false,
+                            Email = "admin@redmine.local",
+                            IsActive = true,
+                            IsFirstLogin = true,
+                            Name = "Administrator",
+                            Password = "$2b$11$GHTvstPIA6dxnUa5hklbSensqCwfG34Nqlbosgx3sv094bzRH5BZe",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("UserPosition", b =>
@@ -299,6 +382,13 @@ namespace RedmineApp.Migrations
                     b.HasIndex("PositionId");
 
                     b.ToTable("UserPositions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            PositionId = 1
+                        });
                 });
 
             modelBuilder.Entity("RedmineApp.Models.EntityModels.Project", b =>

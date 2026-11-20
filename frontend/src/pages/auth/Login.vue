@@ -194,14 +194,6 @@ const handleLogin = async () => {
   opacity: 0.8;
 }
 
-.register-prompt {
-  margin-top: 1.5rem;
-  color: #666;
-  font-size: 1.4rem;
-}
-.register-prompt span {
-  text-decoration: none;
-}
 .font-bold {
   font-weight: 600;
 }

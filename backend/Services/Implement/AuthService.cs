@@ -3,7 +3,6 @@ using RedmineApp.Models.DtoModels.Auth;
 using RedmineApp.Models.EntityModels;
 using RedmineApp.Repositories.Interfaces;
 using RedmineApp.Services.Interfaces;
-using System.Text.RegularExpressions;
 
 namespace RedmineApp.Services.Implement
 {
@@ -174,63 +173,6 @@ namespace RedmineApp.Services.Implement
                 await transaction.RollbackAsync();
                 return ApiResponse.Response(500, "Lỗi hệ thống khi gia hạn!");
             }
-        }
-
-        public async Task<ApiResponse> RegisterAsync(RegisterRequestDto dto)
-        {
-            var emailRegex = @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
-            if (!Regex.IsMatch(dto.Email, emailRegex))
-            {
-                return ApiResponse.Response(400, "Email không hợp lệ!");
-            }
-            var passwordRegex = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
-            if (!Regex.IsMatch(dto.Password, passwordRegex))
-            {
-                return ApiResponse.Response(400, "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*?&)!");
-            }
-            if (await _userRepository.ExistsByEmailAsync(dto.Email))
-            {
-                return ApiResponse.Response(400, "Email đã tồn tại!");
-            }
-            if(dto.ConfirmPassword != dto.Password)
-            {
-                return ApiResponse.Response(400, "Mật khẩu xác nhận không khớp!");
-            }
-            string nextCode;
-            var lastUser = await _userRepository.GetLastUserAsync();
-            if (lastUser == null || string.IsNullOrEmpty(lastUser.Code))
-            {
-                // Nếu chưa có user nào, bắt đầu từ USR001
-                nextCode = "USR001";
-            }
-            else
-            {
-                string numericPart = lastUser.Code.Replace("USR", "");
-
-                if (int.TryParse(numericPart, out int lastNumber))
-                {
-                    // 3. Tăng số lên 1 và định dạng lại (D3 đảm bảo luôn có 3 chữ số: 012)
-                    nextCode = $"USR{(lastNumber + 1):D3}";
-                }
-                else
-                {
-                    // Phòng trường hợp mã cũ không đúng định dạng
-                    nextCode = "USR001";
-                }
-            }
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            var user = new User
-            {
-                Name = dto.Name,
-                Email = dto.Email,
-                Password = passwordHash,
-                Code = nextCode,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-            };
-            await _userRepository.CreateAsync(user);
-            await _userRepository.SaveChangesAsync();
-            return ApiResponse.Response(201, "Đăng ký thành công!", new { user.Id, user.Name, user.Email });
         }
 
         public async Task<ApiResponse> ResetPasswordAsync(int userId, string newPassword)

@@ -26,14 +26,6 @@ export const useAuthStore = defineStore("auth", () => {
       isAuthenticated.value = false;
     }
   };
-  const register = async (userData) => {
-    try {
-      const response = await authService.register(userData);
-      return response;
-    } catch (error) {
-      throw error;
-    }
-  };
   const clearFirstLoginFlag = () => {
     if (user.value) {
       user.value.isFirstLogin = false;
@@ -63,7 +55,6 @@ export const useAuthStore = defineStore("auth", () => {
     setAuthData,
     setUser,
     logout,
-    register,
     resetPassword,
     clearFirstLoginFlag,
     refreshToken,

@@ -8,7 +8,6 @@ namespace RedmineApp.Repositories.Interfaces
     {
         Task<bool> ExistsByEmailAsync(string email);
         Task<bool> ExistsByCodeAsync(string code);
-        Task<User?> GetLastUserAsync();
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetUserByIdAsync(int id);
         Task<User?> GetUserDetailByIdAsync(int id);

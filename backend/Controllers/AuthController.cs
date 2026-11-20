@@ -20,18 +20,6 @@ namespace RedmineApp.Controllers
             _commonService = commonService;
         }
         [HttpPost]
-        [Route("register")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Register(RegisterRequestDto dto)
-        {
-            var response = await _authService.RegisterAsync(dto);
-            if (response.StatusCode == 400)
-            {
-                return BadRequest(response);
-            }
-            return Ok(response);
-        }
-        [HttpPost]
         [Route("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginRequestDto dto)

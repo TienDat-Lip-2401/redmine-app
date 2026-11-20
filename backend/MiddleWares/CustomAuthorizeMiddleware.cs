@@ -24,7 +24,6 @@ namespace RedmineApp.MiddleWares
             if (!string.IsNullOrEmpty(path) &&
                (pathLower.StartsWith("/swagger") ||
                 pathLower.Contains("/api/auth/login") ||
-                pathLower.Contains("/api/auth/register") ||
                 pathLower.Contains("/api/auth/refresh-token")))
             {
                 await _next(context); // Cho đi thẳng vào Controller!

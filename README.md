@@ -9,7 +9,7 @@ Hệ thống nội bộ giúp quản trị viên quản lý tài khoản nhân v
 
 ## Chức năng chính
 
-- **Tài khoản:** đăng ký, đăng nhập, đăng xuất, làm mới phiên đăng nhập, đổi mật khẩu.
+- **Tài khoản:** đăng nhập, đăng xuất, làm mới phiên đăng nhập, đổi mật khẩu. Không có tự đăng ký: tài khoản do Admin tạo.
 - **Nhân viên:** danh sách, thêm, sửa, xóa tài khoản; khi admin tạo tài khoản, hệ thống gửi mật khẩu ngẫu nhiên qua email; xem hồ sơ cá nhân.
 - **Chức vụ:** gán và gỡ chức vụ cho nhân viên.
 - **Dự án:** danh sách, tạo, sửa, xóa dự án; thêm và xóa thành viên dự án; xem dự án của tôi.
@@ -61,6 +61,16 @@ docker compose up -d --build
 | SQL Server | `localhost,1434` (user `sa`) |
 
 Service `db-init` tự tạo database lần đầu và áp dụng migration mới mỗi lần khởi động. Dữ liệu nằm trong volume `mssql-data`; `docker compose down -v` để xoá sạch. Đổi port trong `.env` (`BACKEND_PORT`, `FRONTEND_PORT`, `DB_PORT`); nếu đổi port backend thì đặt lại `VITE_API_URL` và build lại frontend.
+
+### Dữ liệu khởi tạo và tài khoản Admin mặc định
+
+Migration `SeedInitialData` tạo sẵn:
+
+- **Tài khoản Admin:** `admin@redmine.local` / `Admin@123`. Hãy đổi mật khẩu ngay lần đăng nhập đầu, nhất là khi triển khai ở nơi người khác truy cập được.
+- **Chức vụ:** Admin, Project Manager, Developer, Tester.
+- **Vai trò trong dự án:** Backend Developer, FrontEnd Developer, Project Manager, Tester (Id 1–4, khớp với frontend).
+
+Migration chỉ thêm những bản ghi chưa có (so theo tên, email, mã), nên chạy được cả trên database đã có dữ liệu.
 
 ## Cấu trúc thư mục
 

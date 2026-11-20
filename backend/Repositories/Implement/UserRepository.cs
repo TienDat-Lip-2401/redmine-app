@@ -30,10 +30,6 @@ namespace RedmineApp.Repositories.Implement
                 FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<User?> GetLastUserAsync()
-        {
-            return await _context.Users.OrderByDescending(u => u.Code).FirstOrDefaultAsync();
-        }
 
         public async Task<List<Position>> GetPositionsByIdsAsync(List<int> ids)
         {
